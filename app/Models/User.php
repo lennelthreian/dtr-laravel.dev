@@ -19,7 +19,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name', 'first_name', 'middle_name', 'last_name', 'honorific_prefix', 'honorific_suffix',
-        'bio_id', 'username',
+        'emp_code', 'username',
         'office', 'section', 'office_id', 'section_id', 'position', 'sex', 'email', 'password', 'is_super', 'is_coa', 'is_active',
     ];
 
@@ -44,4 +44,24 @@ class User extends Authenticatable
         'is_active' => 'boolean',
         'deleted_at' => 'datetime',
     ];
+
+    public function office()
+    {
+        return $this->belongsTo(Office::class, 'office_id');
+    }
+
+    public function section()
+    {
+        return $this->belongsTo(Section::class, 'section_id');
+    }
+
+    public function dtrUser()
+    {
+        return $this->belongsTo(DtrUser::class, 'emp_code', 'emp_code');
+    }
+
+    public function dtsDocuments()
+    {
+        return $this->hasMany(DtsDocument::class, 'user_id');
+    }
 }

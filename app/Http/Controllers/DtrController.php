@@ -51,7 +51,7 @@ class DtrController extends Controller
 
                 if ($ahUserId && (int) $ahUserId === $user->id) {
                     $osIds = \App\Models\Office::whereNotNull('supervisor_id')->pluck('supervisor_id')->toArray();
-                    $ahDtr = DtrUser::where('bio_id', $user->bio_id)->first();
+                    $ahDtr = DtrUser::where('emp_code', $user->emp_code)->first();
                     $ahOfficeId = $ahDtr ? $ahDtr->office_id : null;
                     $employees = DtrUser::where('is_active', true)
                         ->where(function ($q) use ($osIds, $ahOfficeId) {
@@ -65,7 +65,7 @@ class DtrController extends Controller
                         ->get();
                     $canViewAll = true;
                 } else {
-                    $dtrUser = DtrUser::where('bio_id', $user->bio_id)->first();
+                    $dtrUser = DtrUser::where('emp_code', $user->emp_code)->first();
 
                     if ($dtrUser) {
                         $sectionSupervisorIds = Section::where('supervisor_id', $dtrUser->id)->pluck('id')->toArray();
@@ -97,7 +97,7 @@ class DtrController extends Controller
                         });
                         $canViewAll = true;
                     } else {
-                        $employeeQuery->where('bio_id', $user->bio_id);
+                        $employeeQuery->where('emp_code', $user->emp_code);
                     }
 
                     $employees = $employeeQuery->orderBy('first_name')->orderBy('last_name')->get();
@@ -132,15 +132,15 @@ class DtrController extends Controller
 
             $bioId = $request->emp;
             if (!$bioId && !$canViewAll) {
-                $bioId = $user->bio_id;
+                $bioId = $user->emp_code;
             }
             if ($bioId) {
-                $employee = DtrUser::where('bio_id', $bioId)
+                $employee = DtrUser::where('emp_code', $bioId)
                     ->where('is_active', true)
                     ->first();
 
                 if ($employee) {
-                    $targetUser = \App\Models\User::where('bio_id', $bioId)->first();
+                    $targetUser = \App\Models\User::where('emp_code', $bioId)->first();
                     $targetIsAgencyHead = $targetUser && ($settings['agency_head_user_id'] ?? null) && (int) $settings['agency_head_user_id'] === $targetUser->id;
                     if (!$targetIsAgencyHead && $targetUser) {
                         $ahName = $settings['agency_head_name'] ?? '';
@@ -592,7 +592,7 @@ class DtrController extends Controller
             }
         }
 
-        $isOwnDtr = $employee && isset($bioId) && $bioId === $user->bio_id;
+        $isOwnDtr = $employee && isset($bioId) && $bioId === $user->emp_code;
 
         return view('dtr.index', compact(
             'employees', 'dtrData', 'month', 'year', 'monthName',
@@ -609,7 +609,7 @@ class DtrController extends Controller
         $settings = $this->backupOriginalSchedule($settings);
         $settings = $this->applyFourDaySettings($settings);
 
-        $dtrUser = DtrUser::where('bio_id', $user->bio_id)->first();
+        $dtrUser = DtrUser::where('emp_code', $user->emp_code)->first();
         $sectionSupervisorIds = $dtrUser
             ? Section::where('supervisor_id', $dtrUser->id)->pluck('id')->toArray()
             : [];
@@ -638,7 +638,7 @@ class DtrController extends Controller
             ]);
             $bioId = $request->emp;
         } else {
-            $bioId = $user->bio_id;
+            $bioId = $user->emp_code;
         }
 
         $request->validate([
@@ -648,13 +648,13 @@ class DtrController extends Controller
         $month = (int) $request->month;
         $year = (int) $request->year;
 
-        $employee = DtrUser::where('bio_id', $bioId)
+        $employee = DtrUser::where('emp_code', $bioId)
             ->where('is_active', true)
             ->firstOrFail();
 
         if (!$user->is_super && $ahUserId && (int) $ahUserId === $user->id) {
             $osIds = \App\Models\Office::whereNotNull('supervisor_id')->pluck('supervisor_id')->toArray();
-            $ahDtr = DtrUser::where('bio_id', $user->bio_id)->first();
+            $ahDtr = DtrUser::where('emp_code', $user->emp_code)->first();
             $ahOfficeId = $ahDtr ? $ahDtr->office_id : null;
             $allowed = in_array($employee->id, $osIds) || ($ahOfficeId && $employee->office_id == $ahOfficeId);
             if (!$allowed) {
@@ -1107,7 +1107,7 @@ class DtrController extends Controller
             }
         }
 
-        $isOwnDtr = $bioId === $user->bio_id;
+        $isOwnDtr = $bioId === $user->emp_code;
         $isSupervisor = $user->is_super;
         if (!$isSupervisor && $dtrUser) {
             $isSupervisor = Section::where('supervisor_id', $dtrUser->id)
@@ -1159,7 +1159,7 @@ class DtrController extends Controller
         $month = (int) $request->input('month', date('m'));
         $year = (int) $request->input('year', date('Y'));
 
-        $employee = DtrUser::where('bio_id', $user->bio_id)->first();
+        $employee = DtrUser::where('emp_code', $user->emp_code)->first();
 
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $monthName = date('F', mktime(0, 0, 0, $month, 1));
@@ -1169,7 +1169,7 @@ class DtrController extends Controller
         $totalMinutes = 0;
 
         if ($employee) {
-            $bioId = $employee->bio_id;
+            $bioId = $employee->emp_code;
             $empDefaultWW = $employee->default_work_week ?? (($settings['four_day_work_week'] ?? '0') === '1' ? '4-day' : '5-day');
 
             $dtrData = $this->computeDtr($bioId, $year, $month, $settings, $employee->default_work_week ?? null);
@@ -1522,7 +1522,7 @@ class DtrController extends Controller
 
         $totalHoursFormatted = sprintf('%02d:%02d', floor($totalMinutes / 60), $totalMinutes % 60);
 
-        $dtrUser = DtrUser::where('bio_id', $user->bio_id)->first();
+        $dtrUser = DtrUser::where('emp_code', $user->emp_code)->first();
         $isSupervisor = $user->is_super;
         if (!$isSupervisor && $dtrUser) {
             $isSupervisor = \App\Models\Section::where('supervisor_id', $dtrUser->id)->exists()
@@ -1545,7 +1545,7 @@ class DtrController extends Controller
         $settings = $this->backupOriginalSchedule($settings);
         $settings = $this->applyFourDaySettings($settings);
 
-        $employee = DtrUser::where('bio_id', $bioId)->first();
+        $employee = DtrUser::where('emp_code', $bioId)->first();
         if (!$employee) {
             return null;
         }
@@ -1729,34 +1729,34 @@ class DtrController extends Controller
         $protectedBioIds = \App\Models\User::where(function ($q) {
                 $q->where('is_super', true)->orWhere('is_coa', true);
             })
-            ->whereNotNull('bio_id')
-            ->pluck('bio_id')
+            ->whereNotNull('emp_code')
+            ->pluck('emp_code')
             ->toArray();
 
         $ahUserId = $settings['agency_head_user_id'] ?? null;
         if ($ahUserId) {
             $ahUser = \App\Models\User::find($ahUserId);
-            if ($ahUser && $ahUser->bio_id) {
-                $protectedBioIds[] = $ahUser->bio_id;
+            if ($ahUser && $ahUser->emp_code) {
+                $protectedBioIds[] = $ahUser->emp_code;
             }
         }
         $ahName = $settings['agency_head_name'] ?? '';
         if ($ahName) {
             $nameWords = array_filter(explode(' ', preg_replace('/[^a-zA-Z0-9 ]/', '', $ahName)), function ($w) { return strlen(trim($w)) > 2; });
-            $query = \App\Models\User::whereNotNull('bio_id');
+            $query = \App\Models\User::whereNotNull('emp_code');
             foreach ($nameWords as $word) {
                 $query->where('name', 'like', '%' . trim($word) . '%');
             }
             $ahUser = $query->first();
-            if ($ahUser && $ahUser->bio_id) {
-                $protectedBioIds[] = $ahUser->bio_id;
+            if ($ahUser && $ahUser->emp_code) {
+                $protectedBioIds[] = $ahUser->emp_code;
             }
         }
 
         $protectedBioIds = array_values(array_unique(array_filter($protectedBioIds)));
 
         $employees = DtrUser::where('is_active', true)
-            ->whereNotIn('bio_id', $protectedBioIds)
+            ->whereNotIn('emp_code', $protectedBioIds)
             ->orderBy('office')
             ->orderBy('last_name')
             ->orderBy('first_name')
@@ -1772,7 +1772,7 @@ class DtrController extends Controller
             ->approved()
             ->get()
             ->groupBy(function ($edit) {
-                return $edit->employee->bio_id;
+                return $edit->employee->emp_code;
             });
 
         $allDayOverrides = DtrDayOverride::whereIn('employee_id', $employees->pluck('id'))
@@ -1782,13 +1782,13 @@ class DtrController extends Controller
 
         $allDtrs = [];
         foreach ($employees as $employee) {
-            $dtrData = $this->computeDtr($employee->bio_id, $year, $month, $settings, $employee->default_work_week ?? null);
+            $dtrData = $this->computeDtr($employee->emp_code, $year, $month, $settings, $employee->default_work_week ?? null);
 
             $empDefaultWW = $employee->default_work_week ?? (($settings['four_day_work_week'] ?? '0') === '1' ? '4-day' : '5-day');
 
             $dtrData = $this->applyGlobalHolidays($dtrData, $year, $month, $empDefaultWW);
 
-            $approvedEdits = $allApprovedEdits->get($employee->bio_id, collect());
+            $approvedEdits = $allApprovedEdits->get($employee->emp_code, collect());
 
             foreach ($approvedEdits as $edit) {
                 $dayNum = (int) $edit->target_date->format('j');
@@ -2241,7 +2241,7 @@ class DtrController extends Controller
     private function checkIsSupervisor($user)
     {
         if ($user->is_super) return true;
-        $dtrU = DtrUser::where('bio_id', $user->bio_id)->first();
+        $dtrU = DtrUser::where('emp_code', $user->emp_code)->first();
         if (!$dtrU) return false;
         return Section::where('supervisor_id', $dtrU->id)->exists()
             || \App\Models\Office::where('supervisor_id', $dtrU->id)->exists();
@@ -2417,6 +2417,8 @@ class DtrController extends Controller
             $pmIn = null;
             $pmOut = null;
 
+            $pmPunches = [];
+
             foreach ($dayPunches as $p) {
                 $t = $p->punch_time->timestamp;
 
@@ -2427,12 +2429,20 @@ class DtrController extends Controller
                         if ($amOut === null || $t > $amOut) $amOut = $t;
                     }
                 } else {
-                    if (abs($t - $pmStart) <= abs($t - $pmEnd)) {
-                        if ($pmIn === null || $t < $pmIn) $pmIn = $t;
-                    } else {
-                        if ($pmOut === null || $t > $pmOut) $pmOut = $t;
-                    }
+                    $pmPunches[] = $t;
                 }
+            }
+
+            sort($pmPunches);
+            $pmCount = count($pmPunches);
+
+            if ($pmCount === 1 && $pmPunches[0] > strtotime($date . ' ' . $settingsPmStart . ' +1 hour')) {
+                $pmOut = $pmPunches[0];
+            } elseif ($pmCount >= 1) {
+                $pmIn = $pmPunches[0];
+            }
+            if ($pmCount >= 2) {
+                $pmOut = $pmPunches[$pmCount - 1];
             }
 
             $remarks = [];
@@ -2505,7 +2515,7 @@ class DtrController extends Controller
     public function toggleDayWorkWeek(Request $request)
     {
         $user = auth()->user();
-        $employee = DtrUser::where('bio_id', $user->bio_id)->firstOrFail();
+        $employee = DtrUser::where('emp_code', $user->emp_code)->firstOrFail();
 
         $data = $request->validate([
             'target_date' => 'required|date',

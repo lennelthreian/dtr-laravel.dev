@@ -70,7 +70,7 @@
                                     $d = $notif->data['target_date'] ?? null;
                                     $m = $d ? date('n', strtotime($d)) : date('n');
                                     $y = $d ? date('Y', strtotime($d)) : date('Y');
-                                    $ec = $notif->data['bio_id'] ?? '';
+                                    $ec = $notif->data['emp_code'] ?? '';
                                 @endphp
                                 <a href="{{ url('/dtr/show?emp=' . $ec . '&month=' . $m . '&year=' . $y) }}" class="notif-item" data-notif-id="{{ $notif->id }}">
                             @endif
@@ -95,7 +95,7 @@
                     <button class="btn btn-outline btn-sm">Logout</button>
                 </form>
                 <form method="get" action="{{ route('dtr.show') }}" class="inline-form" style="display:inline-flex; align-items:center; gap:4px;">
-                    <input type="hidden" name="emp" value="{{ $employee->bio_id }}">
+                    <input type="hidden" name="emp" value="{{ $employee->emp_code }}">
                     <select name="month" onchange="this.form.submit()" style="padding:6px 10px; border:1.5px solid var(--gray-300); border-radius:4px; font-size:13px; background:var(--white);">
                         @foreach (range(1, 12) as $m)
                             <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>

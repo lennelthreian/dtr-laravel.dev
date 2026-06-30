@@ -78,7 +78,7 @@
                                     $d = $notif->data['target_date'] ?? null;
                                     $m = $d ? date('n', strtotime($d)) : date('n');
                                     $y = $d ? date('Y', strtotime($d)) : date('Y');
-                                    $ec = $notif->data['bio_id'] ?? '';
+                                    $ec = $notif->data['emp_code'] ?? '';
                                 @endphp
                                 <a href="{{ url('/dtr/show?emp=' . $ec . '&month=' . $m . '&year=' . $y) }}" class="notif-item" data-notif-id="{{ $notif->id }}">
                             @endif
@@ -126,17 +126,17 @@
                                     <select name="emp" id="emp" required class="form-control">
                                         <option value="">-- Select Employee --</option>
                                         @foreach ($employees as $emp)
-                                            <option value="{{ $emp->bio_id }}" {{ $emp->bio_id == request('emp') ? 'selected' : '' }}>
-                                                {{ $emp->full_name }} ({{ $emp->bio_id }})
+                                            <option value="{{ $emp->emp_code }}" {{ $emp->emp_code == request('emp') ? 'selected' : '' }}>
+                                                {{ $emp->full_name }} ({{ $emp->emp_code }})
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
                             @else
                                 @foreach ($employees as $emp)
-                                    <input type="hidden" name="emp" value="{{ $emp->bio_id }}">
+                                    <input type="hidden" name="emp" value="{{ $emp->emp_code }}">
                                     <p style="font-size:15px; margin-bottom:18px; color:var(--gray-800);">
-                                        <strong>{{ $emp->full_name }}</strong> ({{ $emp->bio_id }})
+                                        <strong>{{ $emp->full_name }}</strong> ({{ $emp->emp_code }})
                                     </p>
                                 @endforeach
                             @endif

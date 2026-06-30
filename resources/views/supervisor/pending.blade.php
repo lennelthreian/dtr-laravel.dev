@@ -67,7 +67,7 @@
                                     $d = $notif->data['target_date'] ?? null;
                                     $m = $d ? date('n', strtotime($d)) : date('n');
                                     $y = $d ? date('Y', strtotime($d)) : date('Y');
-                                    $ec = $notif->data['bio_id'] ?? '';
+                                    $ec = $notif->data['emp_code'] ?? '';
                                 @endphp
                                 <a href="{{ url('/dtr/show?emp=' . $ec . '&month=' . $m . '&year=' . $y) }}" class="notif-item" data-notif-id="{{ $notif->id }}">
                             @endif

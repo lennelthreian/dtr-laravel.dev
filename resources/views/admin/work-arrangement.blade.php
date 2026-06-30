@@ -90,7 +90,7 @@
                             @forelse ($employees as $employee)
                                 <tr>
                                     <td><strong>{{ $employee->full_name }}</strong></td>
-                                    <td>{{ $employee->bio_id }}</td>
+                                    <td>{{ $employee->emp_code }}</td>
                                     <td>{{ $employee->office ?: '&mdash;' }}</td>
                                     <td>
                                         @if ($employee->default_work_week === '4-day')

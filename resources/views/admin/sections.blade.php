@@ -142,7 +142,7 @@
                     <select name="supervisor_id" id="modal_supervisor_id" class="form-control">
                         <option value="">&mdash; None &mdash;</option>
                         @foreach ($employees as $emp)
-                            <option value="{{ $emp->id }}">{{ $emp->full_name }} ({{ $emp->bio_id }})</option>
+                            <option value="{{ $emp->id }}">{{ $emp->full_name }} ({{ $emp->emp_code }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -165,7 +165,7 @@
                     <select name="oic_id" id="modal_oic_id" class="form-control">
                         <option value="">&mdash; None &mdash;</option>
                         @foreach ($employees as $emp)
-                            <option value="{{ $emp->id }}">{{ $emp->full_name }} ({{ $emp->bio_id }})</option>
+                            <option value="{{ $emp->id }}">{{ $emp->full_name }} ({{ $emp->emp_code }})</option>
                         @endforeach
                     </select>
                 </div>

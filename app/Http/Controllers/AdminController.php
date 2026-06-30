@@ -155,7 +155,7 @@ class AdminController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $employees->where(function ($q) use ($search) {
-                $q->where('bio_id', 'like', '%' . $search . '%')
+                $q->where('emp_code', 'like', '%' . $search . '%')
                   ->orWhere('last_name', 'like', '%' . $search . '%')
                   ->orWhere('first_name', 'like', '%' . $search . '%')
                   ->orWhere('office', 'like', '%' . $search . '%')
@@ -189,7 +189,7 @@ class AdminController extends Controller
 
     public function resetPassword(DtrUser $employee)
     {
-        $user = User::where('bio_id', $employee->bio_id)->first();
+        $user = User::where('emp_code', $employee->emp_code)->first();
 
         if (!$user) {
             return redirect()->route('admin.employees')
@@ -210,7 +210,7 @@ class AdminController extends Controller
         $settingModels = DtrSetting::whereNotIn('setting_key', ['grace_period_minutes', 'office_name'])
             ->orderByRaw('FIELD(setting_key, "' . implode('","', $order) . '")')
             ->get();
-        $users = User::orderBy('name')->get(['id', 'name', 'bio_id']);
+        $users = User::orderBy('name')->get(['id', 'name', 'emp_code']);
         $gDriveConfigured = app(\App\Services\GoogleDriveService::class)->isConfigured();
         return view('admin.settings', compact('settingModels', 'users', 'gDriveConfigured'));
     }
@@ -325,7 +325,7 @@ class AdminController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $employees->where(function ($q) use ($search) {
-                $q->where('bio_id', 'like', '%' . $search . '%')
+                $q->where('emp_code', 'like', '%' . $search . '%')
                   ->orWhere('last_name', 'like', '%' . $search . '%')
                   ->orWhere('first_name', 'like', '%' . $search . '%');
             });
@@ -499,7 +499,7 @@ class AdminController extends Controller
             $employees->where(function ($q) use ($search) {
                 $q->where('last_name', 'like', '%' . $search . '%')
                   ->orWhere('first_name', 'like', '%' . $search . '%')
-                  ->orWhere('bio_id', 'like', '%' . $search . '%');
+                  ->orWhere('emp_code', 'like', '%' . $search . '%');
             });
         }
         $employees = $employees->get();
@@ -507,7 +507,7 @@ class AdminController extends Controller
         $dtrController = app(DtrController::class);
         $stats = [];
         foreach ($employees as $emp) {
-            $result = $dtrController->getEmployeeMonthlyStats($emp->bio_id, $year, $month);
+            $result = $dtrController->getEmployeeMonthlyStats($emp->emp_code, $year, $month);
             if ($result) {
                 $stats[] = $result;
             }

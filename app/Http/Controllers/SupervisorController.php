@@ -25,10 +25,10 @@ class SupervisorController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->groupBy(function ($r) {
-                    return $r->employee->full_name . ' (' . $r->employee->bio_id . ')';
+                    return $r->employee->full_name . ' (' . $r->employee->emp_code . ')';
                 });
         } else {
-            $dtrUser = DtrUser::where('bio_id', $user->bio_id)->first();
+            $dtrUser = DtrUser::where('emp_code', $user->emp_code)->first();
             if (!$dtrUser) {
                 return view('supervisor.pending', ['grouped' => collect()]);
             }
@@ -77,7 +77,7 @@ class SupervisorController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->groupBy(function ($r) {
-                    return $r->employee->full_name . ' (' . $r->employee->bio_id . ')';
+                    return $r->employee->full_name . ' (' . $r->employee->emp_code . ')';
                 });
         }
 
@@ -89,7 +89,7 @@ class SupervisorController extends Controller
         $user = auth()->user();
         if ($user->is_super) return null;
 
-        $dtrUser = DtrUser::where('bio_id', $user->bio_id)->first();
+        $dtrUser = DtrUser::where('emp_code', $user->emp_code)->first();
         if (!$dtrUser) return collect();
 
         return Section::where('supervisor_id', $dtrUser->id)->pluck('id');

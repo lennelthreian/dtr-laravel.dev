@@ -91,7 +91,7 @@
                     <h1 style="font-size:18px; color:var(--primary); margin:0;">Dashboard</h1>
                 </div>
                 <div style="display:flex;gap:8px;align-items:center;">
-                    @if ($employee)<a href="{{ route('dtr.show', ['emp' => $employee->bio_id, 'month' => $month, 'year' => $year]) }}" class="btn btn-primary btn-sm">View Full DTR</a>@endif
+                    @if ($employee)<a href="{{ route('dtr.show', ['emp' => $employee->emp_code, 'month' => $month, 'year' => $year]) }}" class="btn btn-primary btn-sm">View Full DTR</a>@endif
                     @php $unread = $currentUser->unreadNotifications; @endphp
                     <div class="notif-pos">
                         <button class="notif-btn" onclick="toggleNotif()">&#128276;
@@ -109,7 +109,7 @@
                                         $d = $notif->data['target_date'] ?? null;
                                         $m = $d ? date('n', strtotime($d)) : date('n');
                                         $y = $d ? date('Y', strtotime($d)) : date('Y');
-                                        $ec = $notif->data['bio_id'] ?? '';
+                                        $ec = $notif->data['emp_code'] ?? '';
                                     @endphp
                                     <a href="{{ url('/dtr/show?emp=' . $ec . '&month=' . $m . '&year=' . $y) }}" class="notif-item" data-notif-id="{{ $notif->id }}">
                                 @endif

@@ -28,8 +28,8 @@
         </div>
         <div class="form-group">
             <label for="bio-id">Biometrics ID</label>
-            <input id="bio-id" type="text" name="bio_id" value="{{ old('bio_id') }}" required placeholder="Enter Biometrics ID Provided by IT Staff" class="form-control">
-            @error('bio_id')
+            <input id="bio-id" type="text" name="emp_code" value="{{ old('emp_code') }}" required placeholder="Enter Biometrics ID Provided by IT Staff" class="form-control">
+            @error('emp_code')
                 <div style="color:var(--danger); font-size:12px; margin-top:4px;">{{ $message }}</div>
             @enderror
         </div>

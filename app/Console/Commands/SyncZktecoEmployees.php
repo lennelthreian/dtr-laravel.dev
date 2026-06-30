@@ -29,12 +29,12 @@ class SyncZktecoEmployees extends Command
         $usersCreated = 0;
 
         foreach ($zkEmployees as $emp) {
-            if (empty($emp->bio_id)) {
+            $bioId = trim($emp->bio_id ?? $emp->emp_code ?? '');
+            if (empty($bioId)) {
                 $skipped++;
                 continue;
             }
 
-            $bioId = trim($emp->bio_id);
             $firstName = trim($emp->first_name ?? '');
             $lastName = trim($emp->last_name ?? '');
 
@@ -44,7 +44,7 @@ class SyncZktecoEmployees extends Command
             }
 
             DtrUser::updateOrCreate(
-                ['bio_id' => $bioId],
+                ['emp_code' => $bioId],
                 [
                     'first_name' => $firstName,
                     'last_name' => $lastName,
@@ -56,7 +56,7 @@ class SyncZktecoEmployees extends Command
             $synced++;
 
             if ($this->option('create-users')) {
-                $existingUser = User::where('bio_id', $bioId)->first();
+                $existingUser = User::where('emp_code', $bioId)->first();
                 if (!$existingUser) {
                     $username = 'employee' . $bioId;
                     $email = $emp->email ?: $bioId . '@dtr.local';
@@ -65,7 +65,7 @@ class SyncZktecoEmployees extends Command
                         'name' => trim($firstName . ' ' . $lastName),
                         'first_name' => $firstName,
                         'last_name' => $lastName,
-                        'bio_id' => $bioId,
+                        'emp_code' => $bioId,
                         'username' => $username,
                         'email' => $email,
                         'password' => Hash::make('password'),
@@ -78,7 +78,7 @@ class SyncZktecoEmployees extends Command
 
         $this->info("Synced {$synced} employees to dtr_users.");
         if ($skipped > 0) {
-            $this->warn("Skipped {$skipped} employees with missing bio_id.");
+            $this->warn("Skipped {$skipped} employees with missing emp_code.");
         }
         if ($this->option('create-users')) {
             $this->info("Created {$usersCreated} user accounts (default password: 'password').");

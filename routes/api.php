@@ -17,3 +17,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/biometric/punch', 'App\Http\Controllers\Api\BiometricPunchController@webhook')
+    ->withoutMiddleware('auth:api')
+    ->name('biometric.punch');
+
+Route::get('/biometric/status', 'App\Http\Controllers\Api\BiometricPunchController@status')
+    ->withoutMiddleware('auth:api')
+    ->name('biometric.status');

@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('login');
-});
+    return view('portal');
+})->name('portal');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])
@@ -27,6 +27,56 @@ Route::post('/logout', [App\Http\Controllers\Auth\LogoutController::class, 'stor
 Route::get('/sections-by-office/{office}', function (App\Models\Office $office) {
     return $office->sections()->orderBy('name')->pluck('name', 'id');
 })->name('sections-by-office');
+
+Route::prefix('dts')->name('dts.')->group(function () {
+    Route::get('/login', [App\Http\Controllers\DtsController::class, 'showLoginForm'])
+        ->name('login');
+    Route::post('/login', [App\Http\Controllers\DtsController::class, 'login']);
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/', [App\Http\Controllers\DtsController::class, 'index'])
+            ->name('index');
+
+        Route::get('/documents', [App\Http\Controllers\DtsController::class, 'documents'])
+            ->name('documents');
+        Route::get('/documents/create', [App\Http\Controllers\DtsController::class, 'create'])
+            ->name('documents.create');
+        Route::post('/documents', [App\Http\Controllers\DtsController::class, 'store'])
+            ->name('documents.store');
+        Route::get('/documents/{document}', [App\Http\Controllers\DtsController::class, 'show'])
+            ->name('documents.show');
+        Route::get('/documents/{document}/edit', [App\Http\Controllers\DtsController::class, 'edit'])
+            ->name('documents.edit');
+        Route::put('/documents/{document}', [App\Http\Controllers\DtsController::class, 'update'])
+            ->name('documents.update');
+        Route::delete('/documents/{document}', [App\Http\Controllers\DtsController::class, 'destroy'])
+            ->name('documents.destroy');
+        Route::post('/documents/{id}/restore', [App\Http\Controllers\DtsController::class, 'restore'])
+            ->name('documents.restore');
+        Route::get('/documents/{document}/print-routing-slip', [App\Http\Controllers\DtsController::class, 'printRoutingSlip'])
+            ->name('documents.print-routing-slip');
+        Route::post('/documents/{document}/forward', [App\Http\Controllers\DtsController::class, 'forward'])
+            ->name('documents.forward');
+        Route::post('/documents/{document}/receive', [App\Http\Controllers\DtsController::class, 'receive'])
+            ->name('documents.receive');
+        Route::post('/documents/{document}/process', [App\Http\Controllers\DtsController::class, 'process'])
+            ->name('documents.process');
+
+        Route::get('/notifications', [App\Http\Controllers\DtsController::class, 'notifications'])
+            ->name('notifications');
+        Route::get('/notifications/{id}/read', [App\Http\Controllers\DtsController::class, 'markNotificationRead'])
+            ->name('notifications.read');
+        Route::post('/notifications/mark-all-read', [App\Http\Controllers\DtsController::class, 'markAllNotificationsRead'])
+            ->name('notifications.mark-all-read');
+
+        Route::get('/sections-by-office/{office}', [App\Http\Controllers\DtsController::class, 'sectionsByOffice'])
+            ->name('sections-by-office');
+        Route::get('/users-by-office/{office}', [App\Http\Controllers\DtsController::class, 'usersByOffice'])
+            ->name('users-by-office');
+        Route::get('/users-by-section/{section}', [App\Http\Controllers\DtsController::class, 'usersBySection'])
+            ->name('users-by-section');
+    });
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/dtr', [App\Http\Controllers\DtrController::class, 'index'])

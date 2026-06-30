@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\BackupDatabase::class,
+        Commands\SyncBiometricPunches::class,
     ];
 
     /**
@@ -27,6 +28,14 @@ class Kernel extends ConsoleKernel
         if (config('google-drive.scheduled_backup')) {
             $schedule->command('backup:run')->dailyAt('23:00');
         }
+
+        $schedule->command('dtr:sync-punches')->everyMinute()
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('dtr:sync-employees --create-users')->everySixHours()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

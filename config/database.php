@@ -93,12 +93,12 @@ return [
 
         'zkbiotime' => [
             'driver' => 'mysql',
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
+            'host' => env('ZK_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('ZK_DB_PORT', env('DB_PORT', '3306')),
             'database' => env('ZK_DB_DATABASE', 'zkbiotime'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
+            'username' => env('ZK_DB_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('ZK_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('ZK_DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',

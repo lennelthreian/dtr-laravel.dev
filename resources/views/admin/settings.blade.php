@@ -110,7 +110,7 @@
                                                 <option value="">-- Select User --</option>
                                                 @foreach ($users as $user)
                                                     <option value="{{ $user->id }}" {{ $setting->setting_value == $user->id ? 'selected' : '' }}>
-                                                        {{ $user->name }} ({{ $user->bio_id }})
+                                                        {{ $user->name }} ({{ $user->emp_code }})
                                                     </option>
                             @endforeach
                                             </select>
