@@ -293,6 +293,7 @@ class DtsController extends Controller
         $data = $request->validate([
             'recipient_id' => 'required|exists:users,id',
             'notes' => 'nullable|string',
+            'action_requested' => 'nullable|string|max:100',
         ]);
 
         $oldStatus = $document->status;
@@ -306,7 +307,8 @@ class DtsController extends Controller
 
         $recipient = User::find($data['recipient_id']);
         $this->logAction($document, auth()->id(), 'forwarded', $oldStatus, 'pending',
-            'Forwarded to ' . $recipient->name . ($data['notes'] ? ' - ' . $data['notes'] : ''));
+            $data['notes'] ?? null,
+            $data['action_requested']);
 
         $this->notify($data['recipient_id'], $document->id, 'forwarded',
             auth()->user()->name . ' forwarded document ' . $document->tracking_number . ' to you');
@@ -434,14 +436,46 @@ class DtsController extends Controller
             'logs' => function ($q) { $q->with('user')->orderBy('created_at'); }]);
 
         $routingEntries = $document->logs->filter(function ($log) {
-            return in_array($log->action, ['forwarded', 'received', 'processed', 'created']);
-        });
+            return in_array($log->action, ['forwarded', 'created']);
+        })->values();
 
         $rows = [];
-        foreach ($routingEntries as $entry) {
-            $fromUser = $entry->action === 'created' ? $document->sender : $entry->user;
-            $toUser = $entry->action === 'forwarded' ? $document->recipient
-                : ($entry->action === 'received' ? $entry->user : $document->recipient);
+        $entryCount = count($routingEntries);
+
+        foreach ($routingEntries as $i => $entry) {
+            $nextEntry = $routingEntries[$i + 1] ?? null;
+
+            if ($entry->action === 'created') {
+                $fromUser = $document->sender;
+                $toUser = null;
+                for ($j = $i + 1; $j < $entryCount; $j++) {
+                    if (in_array($routingEntries[$j]->action, ['forwarded', 'received'])) {
+                        $toUser = $routingEntries[$j]->user;
+                        break;
+                    }
+                }
+                if (!$toUser) {
+                    $toUser = $document->recipient;
+                }
+            } elseif ($entry->action === 'forwarded') {
+                $fromUser = $entry->user;
+                $toUser = null;
+                for ($j = $i + 1; $j < $entryCount; $j++) {
+                    if (in_array($routingEntries[$j]->action, ['forwarded', 'received'])) {
+                        $toUser = $routingEntries[$j]->user;
+                        break;
+                    }
+                }
+                if (!$toUser) {
+                    $toUser = $document->recipient;
+                }
+            } elseif ($entry->action === 'received') {
+                $fromUser = $i > 0 ? $routingEntries[$i - 1]->user : $document->sender;
+                $toUser = $entry->user;
+            } else {
+                $fromUser = $entry->user;
+                $toUser = $entry->user;
+            }
 
             $fromName = optional($fromUser)->name ?? '-';
             $fromOfficeName = null;
@@ -504,6 +538,8 @@ class DtsController extends Controller
                 'time' => $entry->created_at->format('h:i A'),
                 'from' => $fromDisplay,
                 'to' => $toDisplay,
+                'action_requested' => $entry->action_requested,
+                'notes' => $entry->notes,
             ];
         }
 
@@ -524,13 +560,14 @@ class DtsController extends Controller
         return 'DTS-' . $year . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);
     }
 
-    private function logAction($document, $userId, $action, $fromStatus, $toStatus, $notes)
+    private function logAction($document, $userId, $action, $fromStatus, $toStatus, $notes, $actionRequested = null)
     {
         DtsDocumentLog::create([
             'document_id' => $document->id,
             'user_id' => $userId,
             'action' => $action,
             'notes' => $notes,
+            'action_requested' => $actionRequested,
             'from_status' => $fromStatus,
             'to_status' => $toStatus,
         ]);

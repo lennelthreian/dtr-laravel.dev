@@ -13,9 +13,10 @@
     <title>Routing Slip - {{ $document->tracking_number }}</title>
     <style>
         :root { --mc: {{ $mc }}; --lc: {{ $lc }}; --dc: {{ $dc }}; --bg: {{ $bg }}; }
-        @page { size: A4; margin: 10mm 25mm; }
+        @page { size: A4; margin: 15mm 20mm; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; color: #222; line-height: 1.5; max-width: 720px; margin: 0 auto; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; color: #222; line-height: 1.5; background: #e6e6e6; margin: 0; padding: 40px 0; }
+        .paper { background: #fff; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 15mm 20mm; box-shadow: 0 4px 24px rgba(0,0,0,0.15); position: relative; }
         .header { text-align: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 3px double var(--mc); }
         .header .agency { font-size: 14px; font-weight: 700; color: var(--mc); letter-spacing: 1px; text-transform: uppercase; }
         .header .sub-agency { font-size: 10px; color: #555; margin-top: 2px; }
@@ -47,7 +48,7 @@
         .no-print-btn button:hover { background: var(--dc); }
         .no-print-btn button.close-btn { background: #666; }
         .no-print-btn button.close-btn:hover { background: #444; }
-        @media print { .no-print-btn { display: none; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        @media print { .no-print-btn { display: none; } body { background: #fff; padding: 0; } .paper { box-shadow: none; width: 100%; min-height: auto; padding: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     </style>
 </head>
 <body>
@@ -56,6 +57,7 @@
         <button onclick="window.close()" class="close-btn">Close</button>
     </div>
 
+    <div class="paper">
     <div class="header">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
             @if($logoPath)
@@ -103,7 +105,14 @@
             </div>
             <div class="info-cell">
                 <span class="info-label">Office &amp; Section:</span>
-                <span class="info-value">{{ optional($document->office)->name ?? 'N/A' }}{{ $document->section ? ' - ' . optional($document->section)->name : '' }}</span>
+                <span class="info-value">
+                    @php
+                        $creator = $document->creator ?? $document->sender;
+                        $creatorOffice = $creator ? ($creator->office_id ? \App\Models\Office::find($creator->office_id) : null) : null;
+                        $creatorSection = $creator && $creator->section_id ? \App\Models\Section::find($creator->section_id) : null;
+                    @endphp
+                    {{ optional($creatorOffice)->name ?? 'N/A' }}{{ $creatorSection ? ' - ' . $creatorSection->name : '' }}
+                </span>
             </div>
         </div>
         <div class="info-row">
@@ -137,7 +146,30 @@
                     <td>{!! $row->from !!}</td>
                     <td>{!! $row->to !!}</td>
                     <td class="center date-cell">{{ $row->time }}</td>
-                    <td style="font-size:11px;color:#333;{{ $loop->first && $document->remarks ? 'background:var(--bg);' : '' }}">{{ $loop->first && $document->remarks ? $document->remarks : '&nbsp;' }}</td>
+                    <td style="font-size:11px;color:#333;">
+                        @php
+                            $ar = $row->action_requested ?? null;
+                            $rn = $row->notes ?? null;
+                            if ($rn) {
+                                $systemPrefixes = ['Forwarded to ', 'Document created by ', 'Document received', 'Document processed'];
+                                foreach ($systemPrefixes as $prefix) {
+                                    if (str_starts_with($rn, $prefix)) {
+                                        $parts = explode(' - ', $rn, 2);
+                                        $rn = isset($parts[1]) ? trim($parts[1]) : null;
+                                        break;
+                                    }
+                                }
+                            }
+                        @endphp
+                        @if($loop->first && $document->remarks)
+                            {{ $document->remarks }}
+                        @elseif($ar || $rn)
+                            @if($ar && $ar !== 'Study/Review')<span style="display:inline-block;background:var(--mc);color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;">{{ $ar }}</span>@endif
+                            @if($rn) <span style="color:#555;">{{ $rn }}</span>@endif
+                        @else
+                            &nbsp;
+                        @endif
+                    </td>
                 </tr>
                 @endforeach
 
@@ -177,5 +209,6 @@
     <script>
     document.getElementById('qr-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=60x60&color={{ str_replace('#', '', $mc) }}&data=' + encodeURIComponent('{{ $docUrl }}');
     </script>
+</div>
 </body>
 </html>

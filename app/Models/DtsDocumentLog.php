@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DtsDocumentLog extends Model
 {
     protected $fillable = [
-        'document_id', 'user_id', 'action', 'notes', 'from_status', 'to_status',
+        'document_id', 'user_id', 'action', 'notes', 'action_requested', 'from_status', 'to_status',
     ];
 
     public function document()

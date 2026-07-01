@@ -177,8 +177,16 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                         </select>
                     </div>
                 </div>
-                <div style="display:flex;gap:8px;">
-                    <input type="text" name="notes" class="form-control" placeholder="Forwarding notes (optional)" style="flex:1;">
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <select name="action_requested" class="form-control" style="flex:1;">
+                        <option value="">-- No Action Requested --</option>
+                        @foreach(['Approval/Signature','Comments/Recommendation','Staff Action','Study/Review','Report Due','Rewrite/Redraft','Information/Notation','See Me/Call Me','Dispatch','Publish','File','Misrouted'] as $action)
+                            <option value="{{ $action }}">{{ $action }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="notes" class="form-control" placeholder="Forwarding notes (optional)" style="flex:2;">
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
                     <button type="submit" class="btn btn-primary">Forward</button>
                 </div>
             </form>
@@ -202,6 +210,9 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                             <span style="color:var(--gray-400);font-size:11px;">{{ $log->from_status }} &rarr; {{ $log->to_status }}</span>
                         @endif
                     </div>
+                    @if($log->action_requested)
+                        <div style="margin-top:2px;"><span style="display:inline-block;background:var(--accent);color:#fff;padding:0 6px;border-radius:3px;font-size:10px;font-weight:600;">{{ $log->action_requested }}</span></div>
+                    @endif
                     @if($log->notes)
                         <div style="color:var(--gray-500);font-size:12px;margin-top:2px;">{{ $log->notes }}</div>
                     @endif

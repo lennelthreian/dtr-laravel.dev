@@ -209,6 +209,10 @@
 <body class="portal-body">
     <div class="portal-wrap">
         <div class="portal-header">
+            @php $portalLogo = App\Models\DtrSetting::getSettings()['logo_path'] ?? null; @endphp
+            @if (!empty($portalLogo))
+                <img src="{{ asset('storage/' . $portalLogo) }}" alt="MBLISTTDA Logo" style="display:block;height:56px;margin:0 auto 12px;border-radius:8px;">
+            @endif
             <h1>MBLISTTDA Portal</h1>
             <p>Metropolitan Baguio City, La Trinidad, Itogon, Sablan, Tuba, and Tublay Development Authority</p>
         </div>
