@@ -10,15 +10,14 @@ class DtsDocument extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'tracking_number', 'title', 'category', 'description', 'type', 'status', 'priority',
+        'tracking_number', 'title', 'category', 'action_requested', 'description', 'type', 'status', 'priority',
         'sender_id', 'recipient_id', 'office_id', 'section_id', 'created_by',
-        'date_received', 'date_actioned', 'deadline', 'remarks',
+        'date_received', 'date_actioned', 'remarks',
     ];
 
     protected $casts = [
         'date_received' => 'date',
         'date_actioned' => 'date',
-        'deadline' => 'date',
     ];
 
     public function sender()

@@ -170,12 +170,12 @@ class DtsController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'nullable|string|max:50',
+            'action_requested' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'type' => 'required|in:incoming,outgoing',
             'priority' => 'required|in:low,normal,high,urgent',
             'recipient_id' => 'nullable|exists:users,id',
             'date_received' => 'nullable|date',
-            'deadline' => 'nullable|date',
             'remarks' => 'nullable|string',
         ]);
 
@@ -238,12 +238,12 @@ class DtsController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'nullable|string|max:50',
+            'action_requested' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'type' => 'required|in:incoming,outgoing',
             'priority' => 'required|in:low,normal,high,urgent',
             'recipient_id' => 'nullable|exists:users,id',
             'date_received' => 'nullable|date',
-            'deadline' => 'nullable|date',
             'remarks' => 'nullable|string',
         ]);
 

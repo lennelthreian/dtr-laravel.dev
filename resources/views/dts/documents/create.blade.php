@@ -38,7 +38,7 @@
         </div>
 
         <div class="form-group">
-            <label for="title">Title</label>
+            <label for="title">Title/Subject/Description</label>
             <input type="text" id="title" name="title" class="form-control" value="{{ old('title') }}" required placeholder="Document title">
         </div>
 
@@ -61,9 +61,16 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" name="description" class="form-control" rows="3" placeholder="Brief description...">{{ old('description') }}</textarea>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="action_requested">Action Requested</label>
+                <select id="action_requested" name="action_requested" class="form-control">
+                    <option value="">-- Select --</option>
+                    @foreach(['Approval/Signature','Comments/Recommendation','Staff Action','Study/Review','Report Due','Rewrite/Redraft','Information/Notation','See Me/Call Me','Dispatch','Publish','File','Misrouted'] as $action)
+                        <option value="{{ $action }}" {{ old('action_requested') === $action ? 'selected' : '' }}>{{ $action }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         <div class="form-row" id="incomingFields" style="display:none;">
@@ -99,13 +106,6 @@
                         </select>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="deadline">Deadline</label>
-                <input type="date" id="deadline" name="deadline" class="form-control" value="{{ old('deadline') }}">
             </div>
         </div>
 

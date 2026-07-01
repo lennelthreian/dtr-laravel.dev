@@ -85,12 +85,16 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                     <td><strong>{{ $document->tracking_number }}</strong></td>
                 </tr>
                 <tr>
-                    <td>Title</td>
+                    <td>Title/Subject/Description</td>
                     <td>{{ $document->title }}</td>
                 </tr>
                 <tr>
-                    <td>Description</td>
-                    <td>{{ $document->description ?: '-' }}</td>
+                    <td>Category</td>
+                    <td>{{ $document->category ?: '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Action Requested</td>
+                    <td>{{ $document->action_requested ?: '-' }}</td>
                 </tr>
                 <tr>
                     <td>Type</td>
@@ -133,10 +137,6 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                 <tr>
                     <td>Date Actioned</td>
                     <td>{{ $document->date_actioned ? $document->date_actioned->format('F j, Y') : '-' }}</td>
-                </tr>
-                <tr>
-                    <td>Deadline</td>
-                    <td>{{ $document->deadline ? $document->deadline->format('F j, Y') : '-' }}</td>
                 </tr>
                 <tr>
                     <td>Remarks</td>

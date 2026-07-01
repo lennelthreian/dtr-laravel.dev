@@ -33,7 +33,7 @@
         </div>
 
         <div class="form-group">
-            <label for="title">Title</label>
+            <label for="title">Title/Subject/Description</label>
             <input type="text" id="title" name="title" class="form-control" value="{{ old('title', $document->title) }}" required>
         </div>
 
@@ -49,9 +49,16 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" name="description" class="form-control" rows="3">{{ old('description', $document->description) }}</textarea>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="action_requested">Action Requested</label>
+                <select id="action_requested" name="action_requested" class="form-control">
+                    <option value="">-- Select --</option>
+                    @foreach(['Approval/Signature','Comments/Recommendation','Staff Action','Study/Review','Report Due','Rewrite/Redraft','Information/Notation','See Me/Call Me','Dispatch','Publish','File','Misrouted'] as $action)
+                        <option value="{{ $action }}" {{ old('action_requested', $document->action_requested) === $action ? 'selected' : '' }}>{{ $action }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         <div style="margin-bottom:16px;">
@@ -89,9 +96,6 @@
                 <label for="date_received">Date Received</label>
                 <input type="date" id="date_received" name="date_received" class="form-control" value="{{ old('date_received', $document->date_received ? $document->date_received->format('Y-m-d') : '') }}">
             </div>
-            <div class="form-group">
-                <label for="deadline">Deadline</label>
-                <input type="date" id="deadline" name="deadline" class="form-control" value="{{ old('deadline', $document->deadline ? $document->deadline->format('Y-m-d') : '') }}">
             </div>
         </div>
 

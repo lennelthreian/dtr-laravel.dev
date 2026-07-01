@@ -41,6 +41,7 @@
                 </a>
             </nav>
             <div class="sidebar-footer">
+                <a href="{{ route('dts.index') }}" style="color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;display:block;padding:6px 0;margin-bottom:4px;">&#128196; Document Tracking System</a>
                 <button onclick="toggleTheme()" class="btn btn-sm" style="background:rgba(255,255,255,0.1); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:12px; width:100%; margin-bottom:8px;" id="themeToggle">Dark Mode</button>
             </div>
         </div>
