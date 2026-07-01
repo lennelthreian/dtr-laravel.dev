@@ -12,7 +12,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1565c0 0%, #1e88e5 100%);
+            background: linear-gradient(135deg, #4A7C2E 0%, #5E8F42 100%);
             padding: 20px;
         }
         .dts-auth-card {
@@ -26,7 +26,7 @@
         .dts-auth-card h1 {
             text-align: center;
             font-size: 20px;
-            color: #1565c0;
+            color: #4A7C2E;
             margin-bottom: 2px;
         }
         .dts-auth-card .auth-subtitle {
@@ -56,8 +56,8 @@
         }
         .dts-auth-card .form-control:focus {
             outline: none;
-            border-color: #1565c0;
-            box-shadow: 0 0 0 3px rgba(21,101,192,0.15);
+            border-color: #4A7C2E;
+            box-shadow: 0 0 0 3px rgba(74,124,46,0.15);
         }
         .dts-auth-card .btn {
             width: 100%;
@@ -70,11 +70,11 @@
             transition: var(--transition);
         }
         .dts-auth-card .btn-primary {
-            background: #1565c0;
+            background: #4A7C2E;
             color: #fff;
         }
         .dts-auth-card .btn-primary:hover {
-            background: #0d47a1;
+            background: #2E5E1A;
         }
         .dts-auth-card .auth-link {
             text-align: center;
@@ -82,7 +82,7 @@
             font-size: 13px;
         }
         .dts-auth-card .auth-link a {
-            color: #1565c0;
+            color: #4A7C2E;
             font-weight: 600;
             text-decoration: none;
         }
@@ -103,6 +103,9 @@
 <body class="dts-auth-body">
     <div>
         <div class="dts-auth-card">
+            @if (!empty($settings['logo_path']))
+                <img src="{{ asset('storage/' . $settings['logo_path']) }}" alt="Logo" style="display:block;height:48px;margin:0 auto 12px;">
+            @endif
             <h1>MBLISTTDA</h1>
             <p class="auth-subtitle">Document Tracking System</p>
             <form method="POST" action="{{ route('dts.login') }}">

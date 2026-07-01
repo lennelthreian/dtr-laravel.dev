@@ -4,6 +4,10 @@
 
 @section('content')
 <div class="page-header">
+    @php $logo = App\Models\DtrSetting::getSettings()['logo_path'] ?? null; @endphp
+    @if (!empty($logo))
+        <img src="{{ asset('storage/' . $logo) }}" alt="Logo" style="display:block;height:52px;margin:0 auto 10px;">
+    @endif
     <h1>Document Tracking Dashboard</h1>
     <p>{{ date('F j, Y') }}</p>
 </div>

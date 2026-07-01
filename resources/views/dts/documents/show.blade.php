@@ -101,6 +101,10 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                     <td><span class="badge {{ $document->type === 'incoming' ? 'badge-blue' : 'badge-green' }}">{{ ucfirst($document->type) }}</span></td>
                 </tr>
                 <tr>
+                    <td>Communication</td>
+                    <td><span class="badge" style="background:{{ $document->communication_type === 'external' ? '#FDF0E0' : '#E8F0E0' }};color:{{ $document->communication_type === 'external' ? '#CC6B2C' : '#4A7C2E' }};font-weight:600;">{{ ucfirst($document->communication_type) }}</span></td>
+                </tr>
+                <tr>
                     <td>Status</td>
                     <td><span class="badge">{{ ucfirst($document->status) }}</span></td>
                 </tr>

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('dtr.css') }}">
     <script>if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');</script>
     <style>
+        .dts-layout { --primary: #4A7C2E; --primary-light: #5E8F42; --primary-dark: #2E5E1A; --accent: #4A7C2E; --accent-light: #5E8F42; }
         .table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .table th { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--gray-200); color: var(--gray-600); font-weight: 600; font-size: 12px; white-space: nowrap; }
         .table td { padding: 10px 10px; border-bottom: 1px solid var(--gray-100); color: var(--gray-800); }
@@ -26,11 +27,17 @@
     @php
         $unreadDtsNotifications = App\Models\DtsNotification::where('user_id', $currentUser->id)
             ->where('is_read', false)->count();
+        $dtsNotifications = App\Models\DtsNotification::where('user_id', $currentUser->id)
+            ->where('is_read', false)->latest()->take(10)->get();
     @endphp
 
-    <div class="layout-sidebar">
+    <div class="layout-sidebar dts-layout">
         <div class="sidebar no-print">
             <div class="sidebar-header">
+                @php $logo = App\Models\DtrSetting::getSettings()['logo_path'] ?? null; @endphp
+                @if (!empty($logo))
+                    <img src="{{ asset('storage/' . $logo) }}" alt="Logo" style="display:block;height:40px;margin:0 auto 8px;">
+                @endif
                 <h2 style="color:#fff;font-size:16px;margin:0 0 2px;">MBLISTTDA</h2>
                 <p style="color:rgba(255,255,255,0.7);font-size:11px;">Document Tracking System</p>
                 <p style="color:rgba(255,255,255,0.9);font-size:12px;margin-top:4px;">{{ $currentUser->name }}</p>
@@ -73,6 +80,47 @@
         </div>
 
         <div class="main-content">
+            <div class="navbar no-print" style="margin-bottom:16px;">
+                <div class="navbar-left">
+                    <div id="dtsClock" style="font-size:13px;font-weight:600;color:var(--gray-700);"></div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div class="notif-pos">
+                        <button class="notif-btn" onclick="toggleNotif()">&#128276;
+                            @if ($unreadDtsNotifications > 0)
+                                <span class="notif-badge">{{ $unreadDtsNotifications }}</span>
+                            @endif
+                        </button>
+                        <div id="notifDropdown" class="notif-dropdown">
+                            <div class="notif-header">Notifications</div>
+                            @forelse ($dtsNotifications as $notif)
+                                <a href="{{ route('dts.notifications.read', $notif->id) }}" class="notif-item" data-notif-id="{{ $notif->id }}">
+                                    <strong>{{ $notif->message }}</strong>
+                                    <div class="notif-time">{{ $notif->created_at->diffForHumans() }}</div>
+                                </a>
+                            @empty
+                                <div style="padding:24px;text-align:center;color:var(--gray-500);font-size:13px;">No new notifications</div>
+                            @endforelse
+                            @if ($unreadDtsNotifications > 0)
+                                <div class="notif-footer">
+                                    <form method="POST" action="{{ route('dts.notifications.mark-all-read') }}">
+                                        @csrf
+                                        <button type="submit" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;">Mark all as read</button>
+                                    </form>
+                                </div>
+                            @endif
+                            <div class="notif-footer" style="border-top:none;padding-top:0;">
+                                <a href="{{ route('dts.notifications') }}" style="color:var(--gray-600);font-size:11px;">View all notifications</a>
+                            </div>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}" class="logout-corner" style="margin:0;">
+                        @csrf
+                        <button class="btn btn-outline btn-sm">Logout</button>
+                    </form>
+                </div>
+            </div>
+
             @if(session('success'))
                 <div class="alert alert-success" style="margin-bottom:16px;">{{ session('success') }}</div>
             @endif
@@ -87,6 +135,27 @@
             @yield('content')
         </div>
     </div>
+
+    <script>
+    function updateClock() {
+        var now = new Date();
+        var opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        document.getElementById('dtsClock').textContent = now.toLocaleDateString('en-PH', opts);
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    function toggleNotif() {
+        var el = document.getElementById('notifDropdown');
+        el.classList.toggle('active');
+    }
+    document.addEventListener('click', function(e) {
+        var dd = document.getElementById('notifDropdown');
+        if (dd && dd.classList.contains('active') && !e.target.closest('.notif-pos')) {
+            dd.classList.remove('active');
+        }
+    });
+    </script>
 
     <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display:none;">
         @csrf

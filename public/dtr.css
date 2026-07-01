@@ -1,10 +1,10 @@
 /* ===== DESIGN SYSTEM ===== */
 :root {
-  --primary: #2d5a27;
-  --primary-light: #3d7a35;
-  --primary-dark: #1e401a;
-  --accent: #1a6b1a;
-  --accent-light: #228b22;
+    --primary: #2d5a27;
+    --primary-light: #3d7a35;
+    --primary-dark: #1e401a;
+    --accent: #1a6b1a;
+    --accent-light: #228b22;
   --danger: #c0392b;
   --danger-light: #e74c3c;
   --warning: #f39c12;
@@ -669,11 +669,11 @@ tbody tr:last-child td { border-bottom: none; }
     --gray-800: #343a40;
     --gray-900: #212529;
     --white: #ffffff;
-    --primary: #2d5a27;
-    --primary-light: #3d7a35;
-    --primary-dark: #1e401a;
-    --accent: #1a6b1a;
-    --accent-light: #228b22;
+  --primary: #2d5a27;
+  --primary-light: #3d7a35;
+  --primary-dark: #1e401a;
+  --accent: #1a6b1a;
+  --accent-light: #228b22;
     --danger: #c0392b;
     --danger-light: #e74c3c;
     --warning: #f39c12;

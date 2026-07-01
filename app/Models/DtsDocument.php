@@ -10,7 +10,7 @@ class DtsDocument extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'tracking_number', 'title', 'category', 'action_requested', 'description', 'type', 'status', 'priority',
+        'tracking_number', 'title', 'category', 'action_requested', 'description', 'type', 'communication_type', 'status', 'priority',
         'sender_id', 'recipient_id', 'office_id', 'section_id', 'created_by',
         'date_received', 'date_actioned', 'remarks',
     ];

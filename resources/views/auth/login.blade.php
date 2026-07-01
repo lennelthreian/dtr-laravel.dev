@@ -26,5 +26,8 @@
         <div class="auth-link">
             Don't have an account? <a href="{{ route('register') }}">Register</a>
         </div>
+        <div class="auth-link" style="margin-top:4px;">
+            <a href="{{ route('portal') }}">&larr; Return to Portal</a>
+        </div>
     </form>
 @endsection

@@ -27,6 +27,13 @@
                 </select>
             </div>
             <div class="form-group">
+                <label for="communication_type">Type of Communication</label>
+                <select id="communication_type" name="communication_type" class="form-control" required>
+                    <option value="internal" {{ old('communication_type', 'internal') === 'internal' ? 'selected' : '' }}>Internal</option>
+                    <option value="external" {{ old('communication_type') === 'external' ? 'selected' : '' }}>External</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="priority">Priority</label>
                 <select id="priority" name="priority" class="form-control" required>
                     <option value="low" {{ old('priority') === 'low' ? 'selected' : '' }}>Low</option>
