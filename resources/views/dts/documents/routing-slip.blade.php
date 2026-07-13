@@ -202,6 +202,8 @@
         <strong>Republic Act No. 6713</strong> — This document is issued in compliance with the <em>Code of Conduct and Ethical Standards for Public Officials and Employees</em>, which mandates transparency, accountability, and the highest standards of professionalism in government service.
     </div>
 
+    <div style="text-align:right;font-size:9px;color:#999;margin-top:6px;font-style:italic;">*This is a system generated document.</div>
+
     <div class="footer">
         MBLISTTDA Document Tracking System &middot; Routing Slip #{{ $document->tracking_number }} &middot; Printed {{ date('m/d/Y h:i A') }}
     </div>

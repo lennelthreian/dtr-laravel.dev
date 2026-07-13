@@ -9,6 +9,9 @@
         <p style="margin-top:4px;font-size:13px;color:var(--gray-500);">
             Created {{ $document->created_at->format('F j, Y g:i A') }}
             by {{ optional($document->creator)->name ?? 'System' }}
+            @if($super)
+                <span style="background:#FFD700;color:#333;font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;vertical-align:middle;margin-left:4px;">SUPER VIEW</span>
+            @endif
         </p>
     </div>
     <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -20,7 +23,7 @@
         </form>
         @endif
 
-        @if(in_array($document->status, ['received', 'pending']) && ($document->recipient_id === auth()->id() || $document->sender_id === auth()->id()))
+        @if(in_array($document->status, ['received', 'pending']) && ($document->recipient_id === auth()->id() || $document->sender_id === auth()->id() || $super))
         <form method="POST" action="{{ route('dts.documents.process', $document) }}" style="display:inline;">
             @csrf
             <button type="submit" class="btn btn-accent">&#9889; Mark as Processed</button>
@@ -36,11 +39,23 @@
             @method('DELETE')
             <button type="submit" class="btn btn-danger">&#128451; Archive</button>
         </form>
+        @if($super)
+        <form method="POST" action="{{ route('dts.documents.force-delete', $document->id) }}" style="display:inline;" onsubmit="return confirm('PERMANENTLY DELETE this document? This cannot be undone!')">
+            @csrf
+            <button type="submit" class="btn" style="background:#8B0000;color:#fff;border:none;">&#128465; Permanent Delete</button>
+        </form>
+        @endif
         @else
         <form method="POST" action="{{ route('dts.documents.restore', $document->id) }}" style="display:inline;">
             @csrf
             <button type="submit" class="btn btn-accent">&#128260; Restore</button>
         </form>
+        @if($super)
+        <form method="POST" action="{{ route('dts.documents.force-delete', $document->id) }}" style="display:inline;" onsubmit="return confirm('PERMANENTLY DELETE this archived document? This cannot be undone!')">
+            @csrf
+            <button type="submit" class="btn" style="background:#8B0000;color:#fff;border:none;">&#128465; Permanent Delete</button>
+        </form>
+        @endif
         @endif
 
         <span style="margin-left:auto;border-left:1px solid var(--gray-300);padding-left:12px;">
@@ -48,6 +63,10 @@
         </span>
     </div>
 </div>
+
+@if(session('error'))
+    <div class="alert alert-danger" style="margin-bottom:16px;">{{ session('error') }}</div>
+@endif
 
 @php
 $statusSteps = ['pending', 'received', 'processed'];
@@ -152,6 +171,7 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
         @if(!$document->trashed())
         <div class="card">
             <h2 style="font-size:15px;margin-bottom:12px;">Forward Document</h2>
+            @if($canForward)
             <form method="POST" action="{{ route('dts.documents.forward', $document) }}">
                 @csrf
                 <div class="form-row" style="margin-bottom:8px;">
@@ -190,6 +210,21 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                     <button type="submit" class="btn btn-primary">Forward</button>
                 </div>
             </form>
+            @else
+            <div style="padding:16px;background:var(--gray-50);border-radius:var(--radius-md);text-align:center;">
+                @if($document->recipient_id !== auth()->id())
+                    <p style="color:var(--gray-600);font-size:13px;margin:0;">
+                        &#128274; You are not the current recipient of this document.
+                        <br><span style="font-size:12px;color:var(--gray-500);">Only the current recipient can forward this document after receiving it.</span>
+                    </p>
+                @elseif($document->status === 'pending')
+                    <p style="color:var(--gray-600);font-size:13px;margin:0;">
+                        &#9203; This document has not been received yet.
+                        <br><span style="font-size:12px;color:var(--gray-500);">You must receive the document before it can be forwarded.</span>
+                    </p>
+                @endif
+            </div>
+            @endif
         </div>
         @endif
     </div>
@@ -206,6 +241,9 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                     <div style="color:var(--gray-600);">
                         <strong>{{ optional($log->user)->name ?? 'System' }}</strong>
                         <span style="color:var(--accent);font-weight:600;">{{ $log->action }}</span>
+                        @if($log->action === 'forwarded' && optional($log->recipient)->name)
+                            <span style="color:var(--gray-600);font-weight:400;">to <strong>{{ $log->recipient->name }}</strong></span>
+                        @endif
                         @if($log->from_status && $log->to_status)
                             <span style="color:var(--gray-400);font-size:11px;">{{ $log->from_status }} &rarr; {{ $log->to_status }}</span>
                         @endif

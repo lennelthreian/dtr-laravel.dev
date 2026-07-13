@@ -11,9 +11,15 @@ use App\Models\User;
 use App\Services\UserLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DtsController extends Controller
 {
+    private function isSuper()
+    {
+        return auth()->check() && auth()->user()->is_super;
+    }
+
     public function showLoginForm()
     {
         if (Auth::check()) {
@@ -65,38 +71,77 @@ class DtsController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $super = $this->isSuper();
 
-        $incomingCount = DtsDocument::where('recipient_id', $user->id)
-            ->whereIn('status', ['pending', 'received'])
-            ->count();
+        if ($super) {
+            $incomingCount = DtsDocument::where('recipient_id', $user->id)
+                ->whereIn('status', ['pending', 'received'])
+                ->count();
 
-        $outgoingCount = DtsDocument::where('sender_id', $user->id)->count();
+            $outgoingCount = DtsDocument::where('sender_id', $user->id)->count();
 
-        $pendingCount = DtsDocument::where('recipient_id', $user->id)
-            ->where('status', 'pending')
-            ->count();
+            $pendingCount = DtsDocument::where('status', 'pending')->count();
 
-        $processedCount = DtsDocument::where(function ($q) use ($user) {
-            $q->where('sender_id', $user->id)
-              ->orWhere('recipient_id', $user->id);
-        })->where('status', 'processed')->count();
+            $processedCount = DtsDocument::where('status', 'processed')->count();
 
-        $totalDocuments = DtsDocument::count();
+            $totalDocuments = DtsDocument::count();
 
-        $recentDocuments = DtsDocument::with(['sender', 'recipient', 'office', 'section'])
-            ->where(function ($q) use ($user) {
+            $recentDocuments = DtsDocument::with(['sender', 'recipient', 'office', 'section'])
+                ->latest()
+                ->limit(10)
+                ->get();
+
+            $officeStats = DtsDocument::select('office_id', DB::raw('count(*) as total'))
+                ->whereNotNull('office_id')
+                ->groupBy('office_id')
+                ->with('office')
+                ->get();
+
+            $categoryStats = DtsDocument::select('category', DB::raw('count(*) as total'))
+                ->whereNotNull('category')
+                ->groupBy('category')
+                ->orderByDesc('total')
+                ->get();
+
+            $totalUsers = User::where('is_active', true)->count();
+        } else {
+            $incomingCount = DtsDocument::where('recipient_id', $user->id)
+                ->whereIn('status', ['pending', 'received'])
+                ->count();
+
+            $outgoingCount = DtsDocument::where('sender_id', $user->id)->count();
+
+            $pendingCount = DtsDocument::where('recipient_id', $user->id)
+                ->where('status', 'pending')
+                ->count();
+
+            $processedCount = DtsDocument::where(function ($q) use ($user) {
                 $q->where('sender_id', $user->id)
                   ->orWhere('recipient_id', $user->id);
-            })
-            ->latest()
-            ->limit(5)
-            ->get();
+            })->where('status', 'processed')->count();
+
+            $totalDocuments = DtsDocument::count();
+
+            $recentDocuments = DtsDocument::with(['sender', 'recipient', 'office', 'section'])
+                ->where(function ($q) use ($user) {
+                    $q->where('sender_id', $user->id)
+                      ->orWhere('recipient_id', $user->id);
+                })
+                ->latest()
+                ->limit(5)
+                ->get();
+
+            $officeStats = collect();
+            $categoryStats = collect();
+            $totalUsers = 0;
+        }
 
         $offices = Office::with('sections')->orderBy('name')->get();
 
         return view('dts.index', compact(
             'user', 'incomingCount', 'outgoingCount', 'pendingCount',
-            'processedCount', 'totalDocuments', 'recentDocuments', 'offices'
+            'processedCount', 'totalDocuments', 'recentDocuments', 'offices',
+            'super', 'officeStats', 'categoryStats', 'totalUsers'
         ));
     }
 
@@ -104,6 +149,7 @@ class DtsController extends Controller
     {
         $user = auth()->user();
         $type = $request->query('type', 'all');
+        $super = $this->isSuper();
 
         $query = DtsDocument::with(['sender', 'recipient', 'office', 'section', 'creator']);
 
@@ -112,15 +158,20 @@ class DtsController extends Controller
         } elseif ($type === 'outgoing') {
             $query->where('sender_id', $user->id);
         } elseif ($type === 'archived') {
-            $query->onlyTrashed()->where(function ($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                  ->orWhere('recipient_id', $user->id);
-            });
+            $query->onlyTrashed();
+            if (!$super) {
+                $query->where(function ($q) use ($user) {
+                    $q->where('sender_id', $user->id)
+                      ->orWhere('recipient_id', $user->id);
+                });
+            }
         } else {
-            $query->where(function ($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                  ->orWhere('recipient_id', $user->id);
-            });
+            if (!$super) {
+                $query->where(function ($q) use ($user) {
+                    $q->where('sender_id', $user->id)
+                      ->orWhere('recipient_id', $user->id);
+                });
+            }
         }
 
         if ($request->filled('search')) {
@@ -144,10 +195,14 @@ class DtsController extends Controller
             $query->where('category', $request->category);
         }
 
+        if ($request->filled('office_id')) {
+            $query->where('office_id', $request->office_id);
+        }
+
         $documents = $query->latest()->paginate(15)->appends($request->query());
         $offices = Office::orderBy('name')->get();
 
-        return view('dts.documents.index', compact('documents', 'offices', 'type', 'user'));
+        return view('dts.documents.index', compact('documents', 'offices', 'type', 'user', 'super'));
     }
 
     public function create()
@@ -210,8 +265,9 @@ class DtsController extends Controller
     public function show(DtsDocument $document)
     {
         $user = auth()->user();
+        $super = $this->isSuper();
         $document->load(['sender', 'recipient', 'office', 'section', 'creator',
-            'logs' => function ($q) { $q->with('user')->latest(); }]);
+            'logs' => function ($q) { $q->with('user', 'recipient')->latest(); }]);
 
         $offices = Office::orderBy('name')->get();
         $users = User::where('is_active', true)
@@ -219,7 +275,9 @@ class DtsController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('dts.documents.show', compact('document', 'offices', 'users', 'user'));
+        $canForward = $this->canForward($document, $user, $super);
+
+        return view('dts.documents.show', compact('document', 'offices', 'users', 'user', 'super', 'canForward'));
     }
 
     public function edit(DtsDocument $document)
@@ -288,8 +346,32 @@ class DtsController extends Controller
             ->with('success', 'Document restored successfully.');
     }
 
+    public function forceDelete($id)
+    {
+        if (!$this->isSuper()) {
+            abort(403, 'Only super admins can permanently delete documents.');
+        }
+
+        $document = DtsDocument::withTrashed()->findOrFail($id);
+
+        $this->logAction($document, auth()->id(), 'force_deleted', $document->status, null,
+            'Document permanently deleted by super admin');
+
+        $document->forceDelete();
+
+        return redirect()->route('dts.documents', ['type' => 'archived'])
+            ->with('success', 'Document permanently deleted.');
+    }
+
     public function forward(Request $request, DtsDocument $document)
     {
+        $user = auth()->user();
+        $super = $this->isSuper();
+
+        if (!$this->canForward($document, $user, $super)) {
+            return back()->with('error', 'You cannot forward this document yet. It must be received before it can be forwarded.');
+        }
+
         $data = $request->validate([
             'recipient_id' => 'required|exists:users,id',
             'notes' => 'nullable|string',
@@ -305,10 +387,10 @@ class DtsController extends Controller
             'status' => 'pending',
         ]);
 
-        $recipient = User::find($data['recipient_id']);
         $this->logAction($document, auth()->id(), 'forwarded', $oldStatus, 'pending',
             $data['notes'] ?? null,
-            $data['action_requested']);
+            $data['action_requested'],
+            $data['recipient_id']);
 
         $this->notify($data['recipient_id'], $document->id, 'forwarded',
             auth()->user()->name . ' forwarded document ' . $document->tracking_number . ' to you');
@@ -361,6 +443,132 @@ class DtsController extends Controller
 
         return redirect()->route('dts.documents.show', $document)
             ->with('success', 'Document marked as processed.');
+    }
+
+    public function bulkAction(Request $request)
+    {
+        if (!$this->isSuper()) {
+            abort(403, 'Only super admins can perform bulk actions.');
+        }
+
+        $request->validate([
+            'document_ids' => 'required|array',
+            'action' => 'required|in:forward,process,archive',
+            'recipient_id' => 'required_if:action,forward|nullable|exists:users,id',
+            'action_requested' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
+        ]);
+
+        $documentIds = $request->document_ids;
+        $action = $request->action;
+        $user = auth()->user();
+
+        $documents = DtsDocument::whereIn('id', $documentIds)->get();
+        $processed = 0;
+
+        foreach ($documents as $document) {
+            if ($action === 'forward') {
+                $recipient = User::find($request->recipient_id);
+                $oldStatus = $document->status;
+                $document->update([
+                    'recipient_id' => $request->recipient_id,
+                    'office_id' => $recipient->office_id,
+                    'section_id' => $recipient->section_id,
+                    'status' => 'pending',
+                ]);
+                $this->logAction($document, $user->id, 'forwarded', $oldStatus, 'pending',
+                    $request->notes ?? 'Bulk forwarded', $request->action_requested);
+                $this->notify($request->recipient_id, $document->id, 'forwarded',
+                    $user->name . ' forwarded document ' . $document->tracking_number . ' to you (bulk)');
+                $processed++;
+            } elseif ($action === 'process') {
+                $oldStatus = $document->status;
+                $document->update(['status' => 'processed', 'date_actioned' => now()]);
+                $this->logAction($document, $user->id, 'processed', $oldStatus, 'processed',
+                    'Bulk processed');
+                $processed++;
+            } elseif ($action === 'archive') {
+                $this->logAction($document, $user->id, 'archived', $document->status, null,
+                    'Bulk archived');
+                $document->delete();
+                $processed++;
+            }
+        }
+
+        return back()->with('success', "{$processed} document(s) {$action}d successfully.");
+    }
+
+    public function analytics()
+    {
+        if (!$this->isSuper()) {
+            abort(403, 'Only super admins can view analytics.');
+        }
+
+        $totalDocuments = DtsDocument::count();
+        $pendingCount = DtsDocument::where('status', 'pending')->count();
+        $receivedCount = DtsDocument::where('status', 'received')->count();
+        $processedCount = DtsDocument::where('status', 'processed')->count();
+
+        $monthlyStats = DtsDocument::select(
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
+                DB::raw('count(*) as total')
+            )
+            ->where('created_at', '>=', now()->subMonths(12))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        $officeStats = DtsDocument::select('office_id', DB::raw('count(*) as total'))
+            ->whereNotNull('office_id')
+            ->groupBy('office_id')
+            ->with('office')
+            ->orderByDesc('total')
+            ->get();
+
+        $categoryStats = DtsDocument::select('category', DB::raw('count(*) as total'))
+            ->whereNotNull('category')
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->get();
+
+        $priorityStats = DtsDocument::select('priority', DB::raw('count(*) as total'))
+            ->groupBy('priority')
+            ->orderByDesc('total')
+            ->get();
+
+        $topSenders = User::select('users.id', 'users.first_name', 'users.last_name', DB::raw('count(dts_documents.id) as doc_count'))
+            ->join('dts_documents', 'users.id', '=', 'dts_documents.sender_id')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name')
+            ->orderByDesc('doc_count')
+            ->limit(10)
+            ->get();
+
+        $topRecipients = User::select('users.id', 'users.first_name', 'users.last_name', DB::raw('count(dts_documents.id) as doc_count'))
+            ->join('dts_documents', 'users.id', '=', 'dts_documents.recipient_id')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name')
+            ->orderByDesc('doc_count')
+            ->limit(10)
+            ->get();
+
+        $avgProcessingDays = DtsDocument::whereNotNull('date_received')
+            ->whereNotNull('date_actioned')
+            ->selectRaw('AVG(DATEDIFF(date_actioned, date_received)) as avg_days')
+            ->value('avg_days');
+
+        $communicationStats = DtsDocument::select('communication_type', DB::raw('count(*) as total'))
+            ->groupBy('communication_type')
+            ->get();
+
+        $typeStats = DtsDocument::select('type', DB::raw('count(*) as total'))
+            ->groupBy('type')
+            ->get();
+
+        return view('dts.analytics', compact(
+            'totalDocuments', 'pendingCount', 'receivedCount', 'processedCount',
+            'monthlyStats', 'officeStats', 'categoryStats', 'priorityStats',
+            'topSenders', 'topRecipients', 'avgProcessingDays',
+            'communicationStats', 'typeStats'
+        ));
     }
 
     public function notifications()
@@ -433,7 +641,7 @@ class DtsController extends Controller
     public function printRoutingSlip(DtsDocument $document)
     {
         $document->load(['sender', 'recipient', 'office', 'section', 'creator',
-            'logs' => function ($q) { $q->with('user')->orderBy('created_at'); }]);
+            'logs' => function ($q) { $q->with('user', 'recipient')->orderBy('created_at'); }]);
 
         $routingEntries = $document->logs->filter(function ($log) {
             return in_array($log->action, ['forwarded', 'created']);
@@ -550,6 +758,23 @@ class DtsController extends Controller
         return view('dts.documents.routing-slip', compact('document', 'routingEntries', 'rows', 'logoPath', 'docUrl'));
     }
 
+    private function canForward(DtsDocument $document, $user, $super)
+    {
+        if ($super) {
+            return true;
+        }
+
+        if ($document->trashed()) {
+            return false;
+        }
+
+        if ($document->recipient_id === $user->id && in_array($document->status, ['received', 'processed'])) {
+            return true;
+        }
+
+        return false;
+    }
+
     private function generateTrackingNumber()
     {
         $year = date('Y');
@@ -560,7 +785,7 @@ class DtsController extends Controller
         return 'DTS-' . $year . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);
     }
 
-    private function logAction($document, $userId, $action, $fromStatus, $toStatus, $notes, $actionRequested = null)
+    private function logAction($document, $userId, $action, $fromStatus, $toStatus, $notes, $actionRequested = null, $recipientId = null)
     {
         DtsDocumentLog::create([
             'document_id' => $document->id,
@@ -568,6 +793,7 @@ class DtsController extends Controller
             'action' => $action,
             'notes' => $notes,
             'action_requested' => $actionRequested,
+            'recipient_id' => $recipientId,
             'from_status' => $fromStatus,
             'to_status' => $toStatus,
         ]);
@@ -583,4 +809,6 @@ class DtsController extends Controller
             'is_read' => false,
         ]);
     }
+
+
 }

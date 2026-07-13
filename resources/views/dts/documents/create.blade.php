@@ -79,6 +79,7 @@
                 </select>
             </div>
         </div>
+        </div>
 
         <div class="form-row" id="incomingFields" style="display:none;">
             <div class="form-group">
@@ -117,8 +118,8 @@
         </div>
 
         <div class="form-group">
-            <label for="remarks">Remarks</label>
-            <textarea id="remarks" name="remarks" class="form-control" rows="2" placeholder="Additional notes...">{{ old('remarks') }}</textarea>
+            <label for="remarks">Remarks / Description</label>
+            <textarea id="remarks" name="remarks" class="form-control" rows="4" placeholder="Additional notes or document description...">{{ old('remarks') }}</textarea>
         </div>
 
         <div style="display:flex;gap:8px;">

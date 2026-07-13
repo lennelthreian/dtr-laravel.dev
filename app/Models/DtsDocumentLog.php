@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DtsDocumentLog extends Model
 {
     protected $fillable = [
-        'document_id', 'user_id', 'action', 'notes', 'action_requested', 'from_status', 'to_status',
+        'document_id', 'user_id', 'action', 'notes', 'action_requested', 'recipient_id', 'from_status', 'to_status',
     ];
 
     public function document()
@@ -18,5 +18,10 @@ class DtsDocumentLog extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function recipient()
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
     }
 }

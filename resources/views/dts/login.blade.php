@@ -20,7 +20,8 @@
             border-radius: var(--radius-lg);
             padding: 36px 40px;
             width: 100%;
-            max-width: 420px;
+            width: 420px;
+            height: 507.12px;
             box-shadow: var(--shadow-lg);
         }
         .dts-auth-card h1 {

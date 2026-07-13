@@ -61,6 +61,28 @@ Route::prefix('dts')->name('dts.')->group(function () {
             ->name('documents.receive');
         Route::post('/documents/{document}/process', [App\Http\Controllers\DtsController::class, 'process'])
             ->name('documents.process');
+        Route::post('/documents/{id}/force-delete', [App\Http\Controllers\DtsController::class, 'forceDelete'])
+            ->name('documents.force-delete');
+        Route::post('/documents/bulk-action', [App\Http\Controllers\DtsController::class, 'bulkAction'])
+            ->name('documents.bulk-action');
+
+        Route::get('/chat/threads', [App\Http\Controllers\ChatController::class, 'threads'])
+            ->name('chat.threads');
+        Route::get('/chat/search-users', [App\Http\Controllers\ChatController::class, 'searchUsers'])
+            ->name('chat.search-users');
+        Route::post('/chat/threads', [App\Http\Controllers\ChatController::class, 'storeThread'])
+            ->name('chat.threads.store');
+        Route::get('/chat/threads/{thread}/messages', [App\Http\Controllers\ChatController::class, 'messages'])
+            ->name('chat.messages');
+        Route::post('/chat/threads/{thread}/messages', [App\Http\Controllers\ChatController::class, 'sendMessage'])
+            ->name('chat.messages.store');
+        Route::post('/chat/threads/{thread}/close', [App\Http\Controllers\ChatController::class, 'closeThread'])
+            ->name('chat.threads.close');
+        Route::post('/chat/threads/{thread}/open', [App\Http\Controllers\ChatController::class, 'openThread'])
+            ->name('chat.threads.open');
+
+        Route::get('/analytics', [App\Http\Controllers\DtsController::class, 'analytics'])
+            ->name('analytics');
 
         Route::get('/notifications', [App\Http\Controllers\DtsController::class, 'notifications'])
             ->name('notifications');
