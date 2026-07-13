@@ -5,12 +5,15 @@
 @section('content')
 <div class="page-header">
     <h1>Notifications</h1>
-    @if($unreadCount > 0)
-    <form method="POST" action="{{ route('dts.notifications.mark-all-read') }}">
-        @csrf
-        <button type="submit" class="btn btn-outline btn-sm">Mark All as Read</button>
-    </form>
-    @endif
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="{{ route('dts.index') }}" class="btn btn-outline btn-sm">&larr; Dashboard</a>
+        @if($unreadCount > 0)
+        <form method="POST" action="{{ route('dts.notifications.mark-all-read') }}">
+            @csrf
+            <button type="submit" class="btn btn-outline btn-sm">Mark All as Read</button>
+        </form>
+        @endif
+    </div>
 </div>
 
 <div class="card">

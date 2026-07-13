@@ -5,7 +5,10 @@
 @section('content')
 <div class="page-header">
     <h1>Edit Document #{{ $document->tracking_number }}</h1>
-    <a href="{{ route('dts.documents.show', $document) }}" class="btn btn-outline btn-sm">Cancel</a>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="{{ route('dts.index') }}" class="btn btn-outline btn-sm">&larr; Dashboard</a>
+        <a href="{{ route('dts.documents.show', $document) }}" class="btn btn-outline btn-sm">Cancel</a>
+    </div>
 </div>
 
 <div class="card" style="max-width:700px;">

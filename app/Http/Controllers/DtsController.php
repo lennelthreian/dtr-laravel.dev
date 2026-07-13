@@ -498,68 +498,111 @@ class DtsController extends Controller
         return back()->with('success', "{$processed} document(s) {$action}d successfully.");
     }
 
-    public function analytics()
+    public function analytics(Request $request)
     {
         if (!$this->isSuper()) {
             abort(403, 'Only super admins can view analytics.');
         }
 
-        $totalDocuments = DtsDocument::count();
-        $pendingCount = DtsDocument::where('status', 'pending')->count();
-        $receivedCount = DtsDocument::where('status', 'received')->count();
-        $processedCount = DtsDocument::where('status', 'processed')->count();
+        $filters = $request->only(['date_from', 'date_to', 'office_id', 'status', 'priority', 'type']);
+        $offices = Office::orderBy('name')->get();
 
-        $monthlyStats = DtsDocument::select(
+        $base = DtsDocument::query();
+        if (!empty($filters['date_from'])) {
+            $base->where('created_at', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $base->where('created_at', '<=', $filters['date_to'] . ' 23:59:59');
+        }
+        if (!empty($filters['office_id'])) {
+            $base->where('office_id', $filters['office_id']);
+        }
+        if (!empty($filters['priority'])) {
+            $base->where('priority', $filters['priority']);
+        }
+        if (!empty($filters['type'])) {
+            $base->where('type', $filters['type']);
+        }
+
+        $totalDocuments = (clone $base)->count();
+        $pendingCount = (clone $base)->where('status', 'pending')->count();
+        $receivedCount = (clone $base)->where('status', 'received')->count();
+        $processedCount = (clone $base)->where('status', 'processed')->count();
+
+        $monthlyStats = (clone $base)->select(
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
                 DB::raw('count(*) as total')
             )
-            ->where('created_at', '>=', now()->subMonths(12))
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
-        $officeStats = DtsDocument::select('office_id', DB::raw('count(*) as total'))
+        $officeStats = (clone $base)->select('office_id', DB::raw('count(*) as total'))
             ->whereNotNull('office_id')
             ->groupBy('office_id')
             ->with('office')
             ->orderByDesc('total')
             ->get();
 
-        $categoryStats = DtsDocument::select('category', DB::raw('count(*) as total'))
+        $categoryStats = (clone $base)->select('category', DB::raw('count(*) as total'))
             ->whereNotNull('category')
             ->groupBy('category')
             ->orderByDesc('total')
             ->get();
 
-        $priorityStats = DtsDocument::select('priority', DB::raw('count(*) as total'))
+        $priorityStats = (clone $base)->select('priority', DB::raw('count(*) as total'))
             ->groupBy('priority')
             ->orderByDesc('total')
             ->get();
 
-        $topSenders = User::select('users.id', 'users.first_name', 'users.last_name', DB::raw('count(dts_documents.id) as doc_count'))
-            ->join('dts_documents', 'users.id', '=', 'dts_documents.sender_id')
+        $topSendersQuery = User::select('users.id', 'users.first_name', 'users.last_name', DB::raw('count(dts_documents.id) as doc_count'))
+            ->join('dts_documents', 'users.id', '=', 'dts_documents.sender_id');
+        $topRecipientsQuery = User::select('users.id', 'users.first_name', 'users.last_name', DB::raw('count(dts_documents.id) as doc_count'))
+            ->join('dts_documents', 'users.id', '=', 'dts_documents.recipient_id');
+
+        if (!empty($filters['date_from'])) {
+            $topSendersQuery->where('dts_documents.created_at', '>=', $filters['date_from']);
+            $topRecipientsQuery->where('dts_documents.created_at', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $topSendersQuery->where('dts_documents.created_at', '<=', $filters['date_to'] . ' 23:59:59');
+            $topRecipientsQuery->where('dts_documents.created_at', '<=', $filters['date_to'] . ' 23:59:59');
+        }
+        if (!empty($filters['office_id'])) {
+            $topSendersQuery->where('dts_documents.office_id', $filters['office_id']);
+            $topRecipientsQuery->where('dts_documents.office_id', $filters['office_id']);
+        }
+        if (!empty($filters['priority'])) {
+            $topSendersQuery->where('dts_documents.priority', $filters['priority']);
+            $topRecipientsQuery->where('dts_documents.priority', $filters['priority']);
+        }
+        if (!empty($filters['type'])) {
+            $topSendersQuery->where('dts_documents.type', $filters['type']);
+            $topRecipientsQuery->where('dts_documents.type', $filters['type']);
+        }
+
+        $topSenders = $topSendersQuery
             ->groupBy('users.id', 'users.first_name', 'users.last_name')
             ->orderByDesc('doc_count')
             ->limit(10)
             ->get();
 
-        $topRecipients = User::select('users.id', 'users.first_name', 'users.last_name', DB::raw('count(dts_documents.id) as doc_count'))
-            ->join('dts_documents', 'users.id', '=', 'dts_documents.recipient_id')
+        $topRecipients = $topRecipientsQuery
             ->groupBy('users.id', 'users.first_name', 'users.last_name')
             ->orderByDesc('doc_count')
             ->limit(10)
             ->get();
 
-        $avgProcessingDays = DtsDocument::whereNotNull('date_received')
+        $avgProcessingDays = (clone $base)->whereNotNull('date_received')
             ->whereNotNull('date_actioned')
             ->selectRaw('AVG(DATEDIFF(date_actioned, date_received)) as avg_days')
             ->value('avg_days');
 
-        $communicationStats = DtsDocument::select('communication_type', DB::raw('count(*) as total'))
+        $communicationStats = (clone $base)->select('communication_type', DB::raw('count(*) as total'))
             ->groupBy('communication_type')
             ->get();
 
-        $typeStats = DtsDocument::select('type', DB::raw('count(*) as total'))
+        $typeStats = (clone $base)->select('type', DB::raw('count(*) as total'))
             ->groupBy('type')
             ->get();
 
@@ -567,7 +610,7 @@ class DtsController extends Controller
             'totalDocuments', 'pendingCount', 'receivedCount', 'processedCount',
             'monthlyStats', 'officeStats', 'categoryStats', 'priorityStats',
             'topSenders', 'topRecipients', 'avgProcessingDays',
-            'communicationStats', 'typeStats'
+            'communicationStats', 'typeStats', 'filters', 'offices'
         ));
     }
 

@@ -174,6 +174,14 @@
                     <div class="dts-doc-badge">
                         <span style="background:#e74c3c;color:#fff;font-size:9px;padding:2px 7px;border-radius:8px;font-weight:700;">URGENT</span>
                     </div>
+                    @elseif($doc->priority === 'high')
+                    <div class="dts-doc-badge">
+                        <span style="background:#F57C00;color:#fff;font-size:9px;padding:2px 7px;border-radius:8px;font-weight:700;">HIGH</span>
+                    </div>
+                    @elseif($doc->priority === 'low')
+                    <div class="dts-doc-badge">
+                        <span style="background:#6c757d;color:#fff;font-size:9px;padding:2px 7px;border-radius:8px;font-weight:700;">LOW</span>
+                    </div>
                     @endif
                     <div class="dts-doc-action">
                         @if($doc->status === 'pending' && $doc->recipient_id === auth()->id())

@@ -5,7 +5,10 @@
 @section('content')
 <div class="page-header">
     <h1>{{ $type === 'archived' ? 'Archived' : ucfirst($type) }} Documents</h1>
-    <a href="{{ route('dts.documents.create') }}" class="btn btn-primary btn-sm">+ New Document</a>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="{{ route('dts.index') }}" class="btn btn-outline btn-sm">&larr; Dashboard</a>
+        <a href="{{ route('dts.documents.create') }}" class="btn btn-primary btn-sm">+ New Document</a>
+    </div>
 </div>
 
 <div class="card" style="margin-bottom:16px;">

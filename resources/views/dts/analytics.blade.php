@@ -8,6 +8,59 @@
     <a href="{{ route('dts.index') }}" class="btn btn-outline btn-sm">&larr; Back to Dashboard</a>
 </div>
 
+<div class="card" style="margin-bottom:16px;">
+    <form method="GET" action="{{ route('dts.analytics') }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+        <div style="flex:1;min-width:140px;">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">Date From</label>
+            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;">
+        </div>
+        <div style="flex:1;min-width:140px;">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">Date To</label>
+            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;">
+        </div>
+        <div style="flex:1;min-width:160px;">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">Office</label>
+            <select name="office_id" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;">
+                <option value="">All Offices</option>
+                @foreach($offices as $office)
+                    <option value="{{ $office->id }}" {{ ($filters['office_id'] ?? '') == $office->id ? 'selected' : '' }}>{{ $office->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div style="flex:1;min-width:130px;">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">Status</label>
+            <select name="status" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;">
+                <option value="">All Statuses</option>
+                <option value="pending" {{ ($filters['status'] ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="received" {{ ($filters['status'] ?? '') == 'received' ? 'selected' : '' }}>Received</option>
+                <option value="processed" {{ ($filters['status'] ?? '') == 'processed' ? 'selected' : '' }}>Processed</option>
+            </select>
+        </div>
+        <div style="flex:1;min-width:130px;">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">Priority</label>
+            <select name="priority" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;">
+                <option value="">All Priorities</option>
+                <option value="urgent" {{ ($filters['priority'] ?? '') == 'urgent' ? 'selected' : '' }}>Urgent</option>
+                <option value="high" {{ ($filters['priority'] ?? '') == 'high' ? 'selected' : '' }}>High</option>
+                <option value="normal" {{ ($filters['priority'] ?? '') == 'normal' ? 'selected' : '' }}>Normal</option>
+                <option value="low" {{ ($filters['priority'] ?? '') == 'low' ? 'selected' : '' }}>Low</option>
+            </select>
+        </div>
+        <div style="flex:1;min-width:130px;">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">Type</label>
+            <select name="type" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;">
+                <option value="">All Types</option>
+                <option value="incoming" {{ ($filters['type'] ?? '') == 'incoming' ? 'selected' : '' }}>Incoming</option>
+                <option value="outgoing" {{ ($filters['type'] ?? '') == 'outgoing' ? 'selected' : '' }}>Outgoing</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:6px;">
+            <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+            <a href="{{ route('dts.analytics') }}" class="btn btn-outline btn-sm">Reset</a>
+        </div>
+    </form>
+</div>
+
 <div class="stat-row">
     <div class="stat-card">
         <div class="stat-val">{{ $totalDocuments }}</div>
@@ -34,7 +87,13 @@
 <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
     <div style="flex:2;min-width:0;">
         <div class="card" style="margin-bottom:16px;">
-            <h2 style="font-size:15px;margin-bottom:16px;">Documents Created Per Month (Last 12 Months)</h2>
+            <h2 style="font-size:15px;margin-bottom:16px;">Documents Created Per Month
+                @if(!empty($filters['date_from']) || !empty($filters['date_to']))
+                    ({{ $filters['date_from'] ?? 'Start' }} to {{ $filters['date_to'] ?? 'Now' }})
+                @else
+                    (Last 12 Months)
+                @endif
+            </h2>
             <canvas id="monthlyChart" height="200" style="width:100%;"></canvas>
         </div>
 
@@ -198,7 +257,7 @@ function drawBarChart(canvasId, labels, data, color) {
     }
 }
 
-function drawPieChart(canvasId, labels, data) {
+function drawPieChart(canvasId, labels, data, customColors) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
@@ -213,10 +272,11 @@ function drawPieChart(canvasId, labels, data) {
     var cx = w * 0.35, cy = h / 2;
     var r = Math.min(cx - 10, cy - 10, 70);
     var startAngle = -Math.PI / 2;
+    var pallete = customColors || COLORS;
 
     for (var i = 0; i < data.length; i++) {
         var slice = data[i] / total * Math.PI * 2;
-        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.fillStyle = pallete[i % pallete.length];
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, r, startAngle, startAngle + slice);
@@ -229,7 +289,7 @@ function drawPieChart(canvasId, labels, data) {
     var legendY = 10;
     ctx.font = '11px sans-serif';
     for (var i = 0; i < labels.length; i++) {
-        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.fillStyle = pallete[i % pallete.length];
         ctx.fillRect(legendX, legendY + i * 18, 10, 10);
         ctx.fillStyle = '#333';
         ctx.fillText(labels[i] + ' (' + data[i] + ')', legendX + 14, legendY + i * 18 + 9);
@@ -271,7 +331,8 @@ function drawPieChart(canvasId, labels, data) {
     @if($priorityStats->isNotEmpty())
     drawPieChart('priorityChart',
         {!! json_encode($priorityStats->pluck('priority')->map(function($p) { return ucfirst($p); })) !!},
-        {!! json_encode($priorityStats->pluck('total')) !!}
+        {!! json_encode($priorityStats->pluck('total')) !!},
+        {!! json_encode($priorityStats->pluck('priority')->map(function($p) { $colors = ['low'=>'#6c757d','normal'=>'#1976D2','high'=>'#F57C00','urgent'=>'#e74c3c']; return $colors[$p] ?? '#6c757d'; })) !!}
     );
     @endif
 

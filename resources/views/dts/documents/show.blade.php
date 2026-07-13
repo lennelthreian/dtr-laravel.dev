@@ -59,7 +59,8 @@
         @endif
 
         <span style="margin-left:auto;border-left:1px solid var(--gray-300);padding-left:12px;">
-            <a href="{{ route('dts.documents') }}" class="btn btn-outline">&larr; Back to List</a>
+            <a href="{{ route('dts.index') }}" class="btn btn-outline btn-sm">&larr; Dashboard</a>
+            <a href="{{ route('dts.documents') }}" class="btn btn-outline btn-sm">Back to List</a>
         </span>
     </div>
 </div>
@@ -131,14 +132,18 @@ $currentStep = $currentStep !== false ? $currentStep : 0;
                     <td>Priority</td>
                     <td>
                         @if($document->priority === 'urgent')
-                            <span style="color:#e74c3c;font-weight:600;">URGENT</span>
+                            <span style="background:#e74c3c;color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600;">URGENT</span>
+                        @elseif($document->priority === 'high')
+                            <span style="background:#F57C00;color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600;">High</span>
+                        @elseif($document->priority === 'low')
+                            <span style="background:#6c757d;color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600;">Low</span>
                         @else
-                            {{ ucfirst($document->priority) }}
+                            <span style="background:#1976D2;color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600;">Normal</span>
                         @endif
                     </td>
                 </tr>
                 <tr>
-                    <td>Sender</td>
+                    <td>Sender (Source)</td>
                     <td>{{ optional($document->sender)->name ?? '-' }}</td>
                 </tr>
                 <tr>

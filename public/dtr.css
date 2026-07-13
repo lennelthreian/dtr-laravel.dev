@@ -116,10 +116,18 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius-lg);
   padding: 28px 32px;
   margin-bottom: 24px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.page-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.page-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 0; }
 .page-header p { opacity: 0.8; font-size: 14px; }
+.page-header .btn { color: #fff; border-color: rgba(255,255,255,0.5); }
+.page-header .btn:hover { background: rgba(255,255,255,0.15); border-color: #fff; }
+.page-header .btn-primary { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5); }
+.page-header .btn-primary:hover { background: rgba(255,255,255,0.3); }
 
 /* ===== NAVBAR ===== */
 .logout-corner {

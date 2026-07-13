@@ -100,6 +100,20 @@
         </div>
         <div class="info-row">
             <div class="info-cell">
+                <span class="info-label">Priority:</span>
+                <span class="info-value">
+                    @if($document->priority === 'urgent')
+                        <span style="background:#e74c3c;color:#fff;font-size:10px;padding:1px 7px;border-radius:6px;font-weight:600;">URGENT</span>
+                    @elseif($document->priority === 'high')
+                        <span style="background:#F57C00;color:#fff;font-size:10px;padding:1px 7px;border-radius:6px;font-weight:600;">High</span>
+                    @elseif($document->priority === 'low')
+                        <span style="background:#6c757d;color:#fff;font-size:10px;padding:1px 7px;border-radius:6px;font-weight:600;">Low</span>
+                    @else
+                        <span style="background:#1976D2;color:#fff;font-size:10px;padding:1px 7px;border-radius:6px;font-weight:600;">Normal</span>
+                    @endif
+                </span>
+            </div>
+            <div class="info-cell">
                 <span class="info-label">Source:</span>
                 <span class="info-value">{{ optional($document->sender)->name ?? optional($document->office)->name ?? 'N/A' }}</span>
             </div>
