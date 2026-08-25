@@ -68,20 +68,24 @@ Change:
 
 Copy the whole project including `vendor/`, excluding `.git`. Then delete:
 
-- Controllers: `DtrController`, `DtrEditRequestController`, `SupervisorController`, `AdminController`, and `Auth\RegisterController`, `Auth\ForgotPasswordController`, `Auth\ProfileController`
-- Models: `DtrUser`, `DtrSetting`, `DtrEditRequest`, `DtrDayOverride`, `DtrMonthlyShare`, `GlobalHoliday`, `IclockTransaction`, `Memo`, `PasswordResetRequest`, `UserLog`
+- Controllers: `DtrController`, `DtrEditRequestController`, `SupervisorController`, `AdminController`, and `Auth\RegisterController`, `Auth\ForgotPasswordController`, `Auth\ProfileController`, `Auth\LoginController` (unused once `/login` is gone)
+- Models: `DtrUser`, `DtrSetting`, `DtrEditRequest`, `DtrDayOverride`, `DtrMonthlyShare`, `GlobalHoliday`, `IclockTransaction`, `Memo`, `PasswordResetRequest`
+- Model trimming: remove `User::dtrUser()`, `Office::{dtrUsers,supervisor,seniorManager,oic,seniorManagerOic}()`, `Section::{dtrUsers,supervisor,oic}()` — they reference removed `DtrUser`. No DTS code calls them.
+- KEEP in DTS despite DTR-owned table: `UserLog` model, `app/Services/UserLogService.php`, `app/Services/LogsUserActivity.php` trait — DtsController logs activity into the shared `user_logs` table, and `Office`/`Section` boot the trait. Only the table's *migrations* stay in DTR.
 - Console commands: any DTR-only commands (e.g., `SyncZktecoEmployees`) and their registration in `app/Console/Kernel.php`
 - Migrations: everything except the 11 DTS/chat migrations
-- Views: `resources/views/{admin,dtr,supervisor,vendor}/`, `welcome.blade.php`, the whole `resources/views/auth/` folder, top-level `layouts/app.blade.php`. All DTS pages extend `dts.layouts.app`; nothing kept extends the top-level layout.
+- Views: `resources/views/{admin,dtr,supervisor}/`, `portal.blade.php`, `welcome.blade.php`, the whole `resources/views/auth/` folder, top-level `layouts/app.blade.php`. All DTS pages extend `dts.layouts.app`; nothing kept extends the top-level layout. (`resources/views/vendor/` stays — it is the untouched Laravel default pagination skin.)
 - Routes: `/dtr/*`, `/admin/*`, `/supervisor/*` groups, global `sections-by-office` route, `/register`, `/login`, `/forgot-password*`, `/profile`, `/password` routes
 - Rationale: accounts are created by DTR admin / biometric sync; because the DB is centralized, users change their password via the DTR app's profile page and the change applies everywhere.
 
-Keep: `User`, `Office`, `Section` models (trim DTR-only relations such as `User::dtrUser()` if they reference removed classes), `Auth\LoginController` + `Auth\LogoutController` (`/logout` used by the DTS layout; login handled by `DtsController` at `/dts/login`), DTS controllers/models/migrations/views/routes, `public/dtr.css` (shared stylesheet used by DTS layout).
+Keep: `User`, `Office`, `Section` models (trim DTR-only relations such as `User::dtrUser()` if they reference removed classes), `Auth\LogoutController` (`/logout` used by the DTS layout; login handled entirely by `DtsController` at `/dts/login`), DTS controllers/models/migrations/views/routes, `public/dtr.css` (shared stylesheet used by DTS layout).
 
 Change:
 
 - DTS layout links "Back to Portal" and "DTR Dashboard" → config-based URLs.
 - `config/app.php`: `'name' => 'DTS'`, add `'portal_url'` / `'dtr_url'` entries with defaults.
+- `app/Http/Middleware/Authenticate.php::redirectTo()`: always return `route('dts.login')` (drop the path check + generic `login` fallback).
+- `app/Providers/RouteServiceProvider.php`: `HOME = '/dts'`.
 
 ## Shared Concerns
 
