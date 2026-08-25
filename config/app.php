@@ -71,6 +71,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Document Tracking System URL
+    |--------------------------------------------------------------------------
+    |
+    | The base URL of the standalone DTS application, used to link to it
+    | from the MBLISTTDA Portal and other views.
+    |
+    */
+
+    'dts_url' => env('DTS_APP_URL', 'http://localhost/dts-laravel-dev/public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

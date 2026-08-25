@@ -59,9 +59,4 @@ class User extends Authenticatable
     {
         return $this->belongsTo(DtrUser::class, 'emp_code', 'emp_code');
     }
-
-    public function dtsDocuments()
-    {
-        return $this->hasMany(DtsDocument::class, 'user_id');
-    }
 }
